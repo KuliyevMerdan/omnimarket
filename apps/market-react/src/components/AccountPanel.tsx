@@ -3,7 +3,7 @@ import type { CaipChainId, ChainNamespace } from '@omnimarket/wallet-core'
 import { walletConnectId } from '@omnimarket/wallet-core/walletconnect'
 import { useState } from 'react'
 import { describeError } from '../errors'
-import { DEFAULT_CHAINS, networksFor } from '../networks'
+import { DEFAULT_CHAINS, networksFor } from '@omnimarket/app-core'
 import { WalletIcon } from './WalletIcon'
 
 const ECOSYSTEMS: Record<ChainNamespace, string> = { eip155: 'EVM', solana: 'Solana', sui: 'Sui' }
@@ -52,9 +52,7 @@ export function AccountPanel({ onDisconnect }: { onDisconnect: () => void }) {
         {wallet && <WalletIcon wallet={wallet} />}
         <div>
           <div>{viaWalletConnect && wc.peer ? `${wc.peer.name} · WalletConnect` : wallet?.name}</div>
-          <code className="small" title={address}>
-            {address}
-          </code>
+          <omni-address value={address} chars={6} />
         </div>
       </div>
 

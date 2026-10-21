@@ -1,3 +1,4 @@
+import { hasBrand } from '../../brand'
 import {
   SuiSignAndExecuteTransaction,
   SuiSignPersonalMessage,
@@ -17,7 +18,15 @@ export interface SerializableSuiTransaction {
   toJSON(): Promise<string>
 }
 
+const SUI_CONNECTOR_BRAND: unique symbol = Symbol.for('omnimarket.SuiConnector')
+
 export class SuiConnector extends WalletStandardConnector {
+  /** Cross-bundle `instanceof`, see brand.ts. */
+  readonly [SUI_CONNECTOR_BRAND] = true
+  static override [Symbol.hasInstance](value: unknown): boolean {
+    return hasBrand(value, SUI_CONNECTOR_BRAND)
+  }
+
   constructor(wallet: Wallet, chains: readonly [StandardChain, ...StandardChain[]], options: { source?: WalletInfo['source'] } = {}) {
     super(wallet, { namespace: 'sui', chains, source: options.source })
   }

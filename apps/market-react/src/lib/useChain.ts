@@ -7,8 +7,7 @@ import { isSolanaConnector, type SolanaConnector } from '@omnimarket/wallet-core
 import { isSuiConnector, type SuiConnector } from '@omnimarket/wallet-core/sui'
 import type { Address, Rpc, SolanaRpcApi } from '@solana/kit'
 import { useMemo } from 'react'
-import { getSolanaRpc, getSuiClient } from '../clients'
-import { suiNetwork } from '../networks'
+import { getSolanaRpc, getSuiClient, suiNetwork } from '@omnimarket/app-core'
 
 const kioskClients = new Map<string, KioskClient>()
 function getKioskClient(chain: CaipChainId): KioskClient {

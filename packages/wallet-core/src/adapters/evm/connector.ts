@@ -1,3 +1,4 @@
+import { hasBrand } from '../../brand'
 import {
   createWalletClient,
   custom,
@@ -33,8 +34,16 @@ export interface Eip1193ConnectorOptions {
   readonly chains: readonly Chain[]
 }
 
+const EIP1193_CONNECTOR_BRAND: unique symbol = Symbol.for('omnimarket.Eip1193Connector')
+
 /** Any EIP-1193 provider: injected (EIP-6963 / `window.ethereum`) or, later, WalletConnect. */
 export class Eip1193Connector implements WalletConnector {
+  /** Cross-bundle `instanceof`, see brand.ts. */
+  readonly [EIP1193_CONNECTOR_BRAND] = true
+  static [Symbol.hasInstance](value: unknown): boolean {
+    return hasBrand(value, EIP1193_CONNECTOR_BRAND)
+  }
+
   readonly info: WalletInfo
   readonly provider: EIP1193Provider
   readonly #chains: readonly Chain[]

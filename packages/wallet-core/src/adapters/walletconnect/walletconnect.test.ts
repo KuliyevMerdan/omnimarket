@@ -392,3 +392,17 @@ function offlineTransaction(sender: string): Transaction {
   tx.transferObjects([tx.gas], '0x2')
   return tx
 }
+
+describe('cross-bundle instanceof', () => {
+  it('recognizes connectors and errors made by another copy of the package', async () => {
+    const { isEvmConnector } = await import('../evm')
+    const { isSolanaConnector } = await import('../solana')
+    const { WalletError } = await import('../../errors')
+    // What another bundle's instances look like to this copy: same registry symbols, other classes.
+    const foreign = (name: string) => ({ [Symbol.for(`omnimarket.${name}`)]: true })
+    expect(isEvmConnector(foreign('Eip1193Connector') as never)).toBe(true)
+    expect(isSolanaConnector(foreign('Eip1193Connector') as never)).toBe(false)
+    expect(foreign('WalletError') instanceof WalletError).toBe(true)
+    expect(new Error('x') instanceof WalletError).toBe(false)
+  })
+})

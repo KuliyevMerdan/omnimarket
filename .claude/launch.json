@@ -72,6 +72,51 @@
         "--strictPort"
       ],
       "port": 4174
+    },
+    {
+      "name": "market-remote",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--filter",
+        "@omnimarket/market-react",
+        "dev:remote"
+      ],
+      "port": 5181
+    },
+    {
+      "name": "shell",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "OMNI_API_URL=http://localhost:8788",
+        "pnpm",
+        "--filter",
+        "@omnimarket/shell-vue",
+        "dev"
+      ],
+      "port": 5180
+    },
+    {
+      "name": "api-shell",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "PORT=8788",
+        "SIWE_ORIGIN=http://localhost:5180",
+        "pnpm",
+        "--filter",
+        "@omnimarket/api",
+        "dev"
+      ],
+      "port": 8788
+    },
+    {
+      "name": "storybook",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--filter",
+        "@omnimarket/ui",
+        "storybook"
+      ],
+      "port": 6006
     }
   ]
 }

@@ -13,3 +13,5 @@ packages/contracts/broadcast/
 packages/contracts/anvil-state.json
 packages/contracts/.local/
 packages/contracts/move/*/build/
+storybook-static/
+dist-remote/

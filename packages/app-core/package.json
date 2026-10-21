@@ -1,0 +1,27 @@
+{
+  "name": "@omnimarket/app-core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./dev/mockWallets": "./src/dev/mockWallets.ts",
+    "./federation": "./federation.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@mysten/sui": "^2.37.0",
+    "@omnimarket/auth": "workspace:*",
+    "@omnimarket/contracts": "workspace:*",
+    "@omnimarket/tx-engine": "workspace:*",
+    "@omnimarket/wallet-core": "workspace:*",
+    "@solana/kit": "^8.5.0",
+    "viem": "^2.57.7"
+  },
+  "devDependencies": {
+    "vite": "^8.3.5"
+  }
+}

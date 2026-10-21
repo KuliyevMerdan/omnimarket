@@ -2,7 +2,7 @@ import { deployedChainIds } from '@omnimarket/contracts'
 import { useWalletManager } from '@omnimarket/react'
 import { evmChainId } from '@omnimarket/wallet-core'
 import { useState, type ReactNode } from 'react'
-import { findChain } from '../chains'
+import { findChain } from '@omnimarket/app-core'
 import { describeError } from '../errors'
 import { useMarket } from '../lib/useMarket'
 

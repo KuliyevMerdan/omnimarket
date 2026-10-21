@@ -1,41 +1,16 @@
 import type { SiweClient } from '@omnimarket/auth/client'
 import { useAccount, useSiwe, useTransactions, useWalletManager } from '@omnimarket/react'
-import { Suspense, lazy, useCallback, useState, type ReactNode } from 'react'
+import type { MarketPage } from '@omnimarket/app-core'
+import { useCallback, useState } from 'react'
 import { AccountPanel } from './components/AccountPanel'
 import { ActivityPanel } from './components/ActivityPanel'
 import { ConnectPanel } from './components/ConnectPanel'
-import { MarketPage } from './components/MarketPage'
-import { MyNftsPage } from './components/MyNftsPage'
-import { NetworkGate } from './components/NetworkGate'
 import { SiwePanel } from './components/SiwePanel'
 import { UpdateBanner } from './components/UpdateBanner'
 import { WalletConnectDialog } from './components/walletconnect/WalletConnectDialog'
+import { MarketPages, pagesFor } from './MarketPages'
 
-// Chain-specific SDKs (Metaplex Core/Umi, Kiosk) load only when a wallet of that ecosystem connects.
-const SolanaNftsPage = lazy(() => import('./components/solana/SolanaNftsPage').then((m) => ({ default: m.SolanaNftsPage })))
-const SuiMarketPage = lazy(() => import('./components/sui/SuiPages').then((m) => ({ default: m.SuiMarketPage })))
-const SuiNftsPage = lazy(() => import('./components/sui/SuiPages').then((m) => ({ default: m.SuiNftsPage })))
-
-type Tab = 'market' | 'mine' | 'activity'
-
-/** Pages per ecosystem; the wallet layer and the Activity list are shared. */
-const PAGES: Record<string, Partial<Record<Tab, () => ReactNode>>> = {
-  eip155: {
-    market: () => (
-      <NetworkGate>
-        <MarketPage />
-      </NetworkGate>
-    ),
-    mine: () => (
-      <NetworkGate>
-        <MyNftsPage />
-      </NetworkGate>
-    ),
-  },
-  // Solana listings need an escrow program (out of scope); mint and transfer Core assets.
-  solana: { mine: () => <SolanaNftsPage /> },
-  sui: { market: () => <SuiMarketPage />, mine: () => <SuiNftsPage /> },
-}
+type Tab = MarketPage | 'activity'
 
 const TAB_LABELS: Record<Tab, string> = { market: 'Market', mine: 'My NFTs', activity: 'Activity' }
 
@@ -53,8 +28,7 @@ export function App({ siwe }: { siwe: SiweClient }) {
     await manager.disconnect()
   }, [auth, manager])
 
-  const pages = PAGES[namespace ?? ''] ?? {}
-  const tabs = [...(Object.keys(pages) as Tab[]), 'activity' as const]
+  const tabs: Tab[] = [...pagesFor(namespace), 'activity']
   const tab = tabs.includes(selected) ? selected : tabs[0]!
 
   const connected = status === 'connected'
@@ -80,7 +54,7 @@ export function App({ siwe }: { siwe: SiweClient }) {
       {connected ? (
         <div className="layout">
           <main className="main">
-            <Suspense fallback={<p className="muted">Loading…</p>}>{tab === 'activity' ? <ActivityPanel /> : pages[tab]?.()}</Suspense>
+            {tab === 'activity' ? <ActivityPanel /> : <MarketPages namespace={namespace} page={tab} />}
           </main>
           <aside className="aside">
             <AccountPanel onDisconnect={disconnect} />

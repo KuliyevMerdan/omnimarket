@@ -2,7 +2,7 @@ import { useAccount, useWalletConnect, useWalletConnectSession, useWalletError, 
 import { useState } from 'react'
 import type { ChainNamespace, WalletInfo } from '@omnimarket/wallet-core'
 import { WALLETCONNECT_ICON, walletConnectId } from '@omnimarket/wallet-core/walletconnect'
-import { DEFAULT_CHAINS } from '../networks'
+import { DEFAULT_CHAINS } from '@omnimarket/app-core'
 import { describeError } from '../errors'
 import { WalletIcon } from './WalletIcon'
 

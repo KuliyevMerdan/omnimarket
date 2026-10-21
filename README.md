@@ -3,14 +3,18 @@
 A multi-chain NFT marketplace built on its own wallet SDK: one adapter layer over EVM, Solana and Sui,
 with React and Vue bindings over the same framework-agnostic core.
 
-> Status: **phase 4**. Three ecosystems run end to end on local nodes:
+> Status: **phase 5**. Three ecosystems run end to end on local nodes:
 > - EVM: EIP-6963 wallets, gasless EIP-712 listings;
 > - Solana: Wallet Standard, Metaplex Core;
 > - Sui: Wallet Standard, Move package, Kiosk.
 >
 > Mobile wallets connect through WalletConnect v2: one QR scan gives a session across all three
-> namespaces. One sign-in (SIWE / CAIP-122) and one transaction history cover all three. The app is an
-> installable PWA.
+> namespaces. One sign-in (SIWE / CAIP-122) and one transaction history cover all three.
+>
+> Two ways to run the frontend:
+> - the React marketplace on its own, as an installable PWA;
+> - a Vue 3 shell that hosts the marketplace as a Module Federation micro-frontend. Both bind to the
+>   same core instances and share a Web Components UI library.
 
 ## Layout
 
@@ -28,17 +32,27 @@ packages/
                  rebroadcast, commitment), Sui (digest-first, idempotent resubmit, checkpoints)
   contracts/     Solidity (Foundry) + Move (omni_nft) + Metaplex Core/Kiosk helpers, safe metadata parsing
   react/         WalletProvider/TxEngineProvider/WalletConnectProvider, useAccount, useTransactions, useSiwe
+  vue/           createOmniVue, useAccount/useWallets/useTransactions/useSiwe/useWalletConnect; Pinia stores (/pinia)
+  ui/            Web Components (Lit): button, address, tx status, network badge, wallet option, QR; tokens; Storybook
+  app-core/      composition root shared by every frontend: chain config, RPC clients, createOmniCore(),
+                 the host/remote contract and the Module Federation share list (federation.ts)
 apps/
   api/           Hono: SIWE + session, signed order book
-  market-react/  Vite + React 19 marketplace: mint, list (gasless), buy, activity; PWA (pwa/: service worker plugin)
+  market-react/  Vite + React 19 marketplace: mint, list (gasless), buy, activity; PWA (pwa/: service worker plugin);
+                 `--mode remote` builds it as a micro-frontend (src/remote.tsx)
+  shell-vue/     Vue 3 + Pinia + vue-router shell: connect, WalletConnect, account, sign-in, activity; hosts the marketplace
 docs/adr/        architecture decisions
 ```
 
 ```mermaid
 flowchart LR
   subgraph browser
-    UI[React / Vue UI] --> B[bindings: react / vue]
-    B --> M[WalletManager]
+    SHELL[Vue shell] -- mount core, page --> REMOTE[React marketplace remote]
+    SHELL --> VB[vue bindings]
+    REMOTE --> RB[react bindings]
+    VB --> CORE[app-core: one core per page]
+    RB --> CORE
+    CORE --> M[WalletManager]
     M --> EVM[EVM adapter<br/>EIP-6963 + EIP-1193]
     M --> WS[Wallet Standard registry]
     WS --> SOL[Solana connector]
@@ -49,7 +63,7 @@ flowchart LR
     WC --> SUI
   end
   WC -. relay .-> PHONE[mobile wallet]
-  UI -- nonce / verify --> API[api: SIWE + session]
+  CORE -- nonce / verify --> API[api: SIWE + session]
 ```
 
 ## Run
@@ -86,7 +100,16 @@ an in-page mock wallet holding real keys (anvil account #3). The full QR → app
 ecosystem → reload → disconnect flow then works without a phone. `WC_PROJECT_ID=… pnpm test` also runs
 one round trip through the real relay.
 
-The service worker is registered in production builds only: `pnpm --filter @omnimarket/market-react build && … preview`.
+Vue shell with the marketplace as a micro-frontend (Module Federation):
+
+```bash
+pnpm --filter @omnimarket/market-react dev:remote   # remote, built + watched, served at :5181
+pnpm --filter @omnimarket/shell-vue dev             # shell at :5180 (needs an API whose SIWE_ORIGIN is :5180)
+PORT=8788 SIWE_ORIGIN=http://localhost:5180 pnpm --filter @omnimarket/api dev   # with OMNI_API_URL=http://localhost:8788 for the shell
+pnpm --filter @omnimarket/ui storybook              # component library at :6006
+```
+
+`VITE_MARKET_REMOTE_URL` points the shell at a deployed remote. The service worker is registered in production builds only: `pnpm --filter @omnimarket/market-react build && … preview`.
 
 Import an anvil dev account (keys are printed by `anvil`) into MetaMask/Rabby, using the network
 `http://127.0.0.1:8545` with chain id 31337.
@@ -163,6 +186,24 @@ API environment variables:
 - **PWA.** The service worker caches only our hashed static files and the app shell. `/api`, RPC and the relay
   are never cached. A new version never takes over while a wallet prompt or a pairing is open.
 
+## Micro-frontends (phase 5)
+
+See [ADR 0005](docs/adr/0005-vue-shell-react-remote-shared-core.md).
+
+- **One core per page.** The shell creates the wallet manager, engines, SIWE client and WalletConnect session.
+  The React remote gets them through `mount(element, { core, page })` and never creates its own, so there is one
+  connection, one QR scan and one Activity list across both frameworks.
+- **Singletons by configuration.** `@omnimarket/*` (per entry point) and `viem` are shared singletons. At runtime
+  every share is provided by the shell and loaded once. `instanceof` checks on connectors and `WalletError` work
+  across bundles anyway (`Symbol.for` brands), in case a share is ever misconfigured.
+- **Failure isolation.** A versioned mount contract: the shell refuses an incompatible remote, and a remote that
+  fails to load leaves the shell working, with a retry.
+- **Style isolation.** Remote CSS is nested under `.omni-market` and lives in one ref-counted `<style>` that
+  disappears with the last unmount.
+- **One UI library, two frameworks.** Lit Web Components themed by CSS custom properties. They register once
+  even if two bundles load them. Wallet icons are re-sanitized inside the component. Storybook runs with the a11y
+  addon: no WCAG 2.1 A/AA violations reported by axe.
+
 ## Transaction lifecycle
 
 See [ADR 0002](docs/adr/0002-transaction-lifecycle.md) (EVM) and [ADR 0003](docs/adr/0003-wallet-standard-and-chain-lifecycles.md)
@@ -196,7 +237,7 @@ EVM details:
 | 2 ✅ | tx-engine, OmniNFT + OmniMarket (EIP-712 orders), order book API, marketplace UI |
 | 3 ✅ | Wallet Standard adapters for Solana and Sui, CAIP-122 sign-in, Solana/Sui tx engines, Metaplex Core, Move package + Kiosk |
 | 4 ✅ | WalletConnect v2: one session across eip155/solana/sui namespaces, mobile deep links, PWA |
-| 5 | Vue 3 shell + Pinia bindings, Module Federation with the React app as a remote, UI library + Storybook |
+| 5 ✅ | Vue 3 shell + Pinia bindings, Module Federation with the React app as a remote, UI library + Storybook |
 | 6 | Performance budget (lazy chain SDKs, virtualized grids, workers, RPC fallback), approval/permit warnings, threat model |
 
 Production bundle (gzip JS): **125 kB** after phase 1, **174 kB** after phase 2. After phase 3 the main chunk is **93 kB**:

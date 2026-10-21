@@ -1,3 +1,4 @@
+import { hasBrand } from '../../brand'
 import {
   getBase58Decoder,
   getTransactionDecoder,
@@ -23,7 +24,15 @@ import { WalletError, toWalletError } from '../../errors'
 import type { CaipAccountId, WalletInfo } from '../../types'
 import { WalletStandardConnector, type StandardChainList } from '../wallet-standard/connector'
 
+const SOLANA_CONNECTOR_BRAND: unique symbol = Symbol.for('omnimarket.SolanaConnector')
+
 export class SolanaConnector extends WalletStandardConnector {
+  /** Cross-bundle `instanceof`, see brand.ts. */
+  readonly [SOLANA_CONNECTOR_BRAND] = true
+  static override [Symbol.hasInstance](value: unknown): boolean {
+    return hasBrand(value, SOLANA_CONNECTOR_BRAND)
+  }
+
   constructor(wallet: Wallet, chains: StandardChainList, options: { source?: WalletInfo['source'] } = {}) {
     super(wallet, { namespace: 'solana', chains, source: options.source })
   }

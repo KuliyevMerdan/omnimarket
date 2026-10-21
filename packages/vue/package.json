@@ -1,0 +1,36 @@
+{
+  "name": "@omnimarket/vue",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./pinia": "./src/pinia.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@omnimarket/auth": "workspace:*",
+    "@omnimarket/tx-engine": "workspace:*",
+    "@omnimarket/wallet-core": "workspace:*"
+  },
+  "peerDependencies": {
+    "pinia": "^4.0.0",
+    "vue": "^3.5.0"
+  },
+  "peerDependenciesMeta": {
+    "pinia": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@vue/test-utils": "2.5.1",
+    "happy-dom": "21.0.4",
+    "pinia": "4.0.3",
+    "viem": "2.57.7",
+    "vue": "3.5.43"
+  }
+}

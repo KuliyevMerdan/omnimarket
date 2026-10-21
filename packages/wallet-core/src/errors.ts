@@ -1,3 +1,4 @@
+import { hasBrand } from './brand'
 export type WalletErrorCode =
   | 'USER_REJECTED'
   | 'UNAUTHORIZED'
@@ -38,7 +39,15 @@ const RPC_CODES: Readonly<Record<number, WalletErrorCode>> = {
 // Non-EVM wallets often reject without a numeric code.
 const USER_REJECTED_MESSAGE = /user (rejected|denied|cancel)|rejected by (the )?user/i
 
+const WALLET_ERROR_BRAND: unique symbol = Symbol.for('omnimarket.WalletError')
+
 export class WalletError extends Error {
+  /** Cross-bundle `instanceof`, see brand.ts. */
+  readonly [WALLET_ERROR_BRAND] = true
+  static override [Symbol.hasInstance](value: unknown): boolean {
+    return hasBrand(value, WALLET_ERROR_BRAND)
+  }
+
   override readonly name = 'WalletError'
   readonly code: WalletErrorCode
   readonly rpcCode: number | undefined

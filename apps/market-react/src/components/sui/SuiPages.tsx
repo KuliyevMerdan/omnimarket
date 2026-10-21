@@ -15,7 +15,7 @@ import { formatUnits, parseUnits } from 'viem'
 import { describeError, describeTxError } from '../../errors'
 import { useLoader } from '../../lib/useLoader'
 import { useSui, type SuiContext } from '../../lib/useChain'
-import { networkName } from '../../networks'
+import { networkName } from '@omnimarket/app-core'
 import { TokenCard } from '../TokenCard'
 import { TxButton } from '../TxButton'
 

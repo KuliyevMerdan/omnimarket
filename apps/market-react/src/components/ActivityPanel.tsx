@@ -2,21 +2,9 @@ import { useAccount, useTransactions, useTxEngine } from '@omnimarket/react'
 import { TERMINAL_STATUSES, isEvmRecord, namespaceOf, type AnyTxRecord, type DecodedEvent } from '@omnimarket/tx-engine'
 import { useState } from 'react'
 import { formatEther, formatUnits } from 'viem'
-import { findChain } from '../chains'
+import { explorerUrl, findChain, networkName } from '@omnimarket/app-core'
 import { describeError, describeTxError } from '../errors'
 import { useMarket } from '../lib/useMarket'
-import { explorerUrl, networkName } from '../networks'
-
-const STATUS_LABEL: Record<AnyTxRecord['status'], string> = {
-  preparing: 'Simulating',
-  awaiting_signature: 'Waiting for wallet',
-  pending: 'Pending',
-  confirming: 'Confirming',
-  confirmed: 'Confirmed',
-  failed: 'Failed',
-  cancelled: 'Cancelled',
-  replaced: 'Replaced',
-}
 
 /** EVM addresses compare case-insensitively; base58 (Solana) and Sui hex exactly. */
 const sameAddress = (tx: AnyTxRecord, address: string) =>
@@ -106,9 +94,10 @@ function ActivityItem({ tx }: { tx: AnyTxRecord }) {
     <li className={`activity-item status-${tx.status}`}>
       <div className="row between">
         <strong>{tx.label}</strong>
-        <span className={`badge badge-${tx.status}`}>
-          {STATUS_LABEL[tx.status]}
-          {tx.status === 'confirming' && evm && ` ${tx.confirmations}/${tx.requiredConfirmations}`}
+        <span className="row">
+          {/* Shared web component (@omnimarket/ui): the Vue shell renders the same chip. */}
+          <omni-tx-status status={tx.status} />
+          {tx.status === 'confirming' && evm && <span className="muted small">{`${tx.confirmations}/${tx.requiredConfirmations}`}</span>}
         </span>
       </div>
       <div className="muted small row wrap">

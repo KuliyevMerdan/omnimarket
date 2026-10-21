@@ -4,8 +4,7 @@ import { parseChainId, type CaipAccountId } from '@omnimarket/wallet-core'
 import { isEvmConnector, type Eip1193Connector } from '@omnimarket/wallet-core/evm'
 import { useMemo } from 'react'
 import type { Address, Chain, PublicClient } from 'viem'
-import { findChain } from '../chains'
-import { getPublicClient } from '../clients'
+import { findChain, getPublicClient } from '@omnimarket/app-core'
 
 export interface MarketContext {
   readonly chainId: number | undefined
