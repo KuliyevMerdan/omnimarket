@@ -5,6 +5,11 @@
  * Every package with module-level state must be a singleton, or the host and the remote would each
  * get their own: two RPC client caches, two program-error registries, two "current" WalletConnect
  * sessions. Workspace packages are listed per entry point because each subpath is its own share key.
+ *
+ * `@omnimarket/tx-engine/solana|sui` are not share keys: only `@omnimarket/app-core/solana|sui` import
+ * them, and they hold no module state, so they live in the lazy chunk of that singleton. As share keys they
+ * loaded at startup: a host seeds every share its graph imports, even behind `import()`, and a share left
+ * out of that seed binds its exports asynchronously, after the lazy chunk that imports it has run.
  */
 const workspace = { singleton: true, requiredVersion: '^0.1.0' } as const
 
@@ -17,8 +22,6 @@ export const OMNI_SHARED = {
   '@omnimarket/contracts': workspace,
   '@omnimarket/guard': workspace,
   '@omnimarket/tx-engine': workspace,
-  '@omnimarket/tx-engine/solana': workspace,
-  '@omnimarket/tx-engine/sui': workspace,
   '@omnimarket/ui': workspace,
   '@omnimarket/wallet-core': workspace,
   '@omnimarket/wallet-core/evm': workspace,
@@ -41,6 +44,20 @@ export const OMNI_SHARED = {
  * (+4% JS, ~25 kB gzip for the shell).
  */
 export const FEDERATED_OUTPUT = { strictExecutionOrder: true } as const
+
+/**
+ * The remote's share config. The chain entry points are consume-only (`import: false`): the shell is
+ * their only provider anyway, and a consume-only share that the remote reaches only through `import()`
+ * (the Solana and Sui pages) is left out of the remote's init and loaded by that import. With a local
+ * fallback the remote's init would seed them from the shell's provider when the marketplace mounts.
+ */
+const consumeOnly = { ...workspace, import: false } as const
+
+export const MARKET_REMOTE_SHARED = {
+  ...OMNI_SHARED,
+  '@omnimarket/app-core/solana': consumeOnly,
+  '@omnimarket/app-core/sui': consumeOnly,
+}
 
 export const MARKET_REMOTE = {
   name: 'market',

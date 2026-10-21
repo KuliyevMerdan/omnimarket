@@ -250,7 +250,12 @@ See [the threat model](docs/threat-model.md) and [ADR 0006](docs/adr/0006-signin
   `lazyEngine`s. They load when a wallet of that ecosystem connects, or after a reload when the history still
   has pending transactions of that chain. The React hooks suspend until then. The Solana transaction codecs in
   the connectors load with the first transaction. In the shell, nothing from @mysten/sui or the Solana RPC
-  stack is fetched for an EVM user (checked in the browser).
+  stack is fetched for an EVM user, in the production build too (checked in the browser with `vite build` +
+  `vite preview`). Module Federation preloads shares at init, so this takes two settings in
+  `app-core/federation.ts`: `tx-engine/solana|sui` are not share keys (they live in the lazy
+  `app-core/solana|sui` chunk), and the remote consumes `app-core/solana|sui` with `import: false`, which leaves
+  a share reached only through `import()` to that import. An EVM visit to the shell went from 57 JS files
+  (509 kB gzip) to 47 (407 kB).
 - **Windowed grid.** Above 60 tokens only the rows near the viewport are rendered. Row heights are measured,
   rows are found by binary search over offsets, and the page itself scrolls, so it works the same in the
   shell.

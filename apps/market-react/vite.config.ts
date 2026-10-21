@@ -1,5 +1,5 @@
 import { federation } from '@module-federation/vite'
-import { FEDERATED_OUTPUT, MARKET_REMOTE, OMNI_SHARED } from '@omnimarket/app-core/federation'
+import { FEDERATED_OUTPUT, MARKET_REMOTE, MARKET_REMOTE_SHARED } from '@omnimarket/app-core/federation'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import { serviceWorker } from './pwa/plugin.ts'
@@ -29,7 +29,7 @@ export default defineConfig(({ mode }) => {
           name: MARKET_REMOTE.name,
           filename: 'remoteEntry.js',
           exposes: { [MARKET_REMOTE.expose]: './src/remote.tsx' },
-          shared: OMNI_SHARED,
+          shared: MARKET_REMOTE_SHARED,
           manifest: true,
           // The host/remote contract is typed in @omnimarket/app-core; no generated type bundles.
           dts: false,
