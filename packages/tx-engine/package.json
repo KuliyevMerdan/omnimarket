@@ -1,0 +1,24 @@
+{
+  "name": "@omnimarket/tx-engine",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@mysten/sui": "^2.37.0",
+    "@omnimarket/wallet-core": "workspace:*",
+    "@solana-program/compute-budget": "^0.20.0",
+    "@solana/kit": "^8.5.0",
+    "viem": "^2.57.7"
+  },
+  "devDependencies": {
+    "@omnimarket/contracts": "workspace:*"
+  }
+}

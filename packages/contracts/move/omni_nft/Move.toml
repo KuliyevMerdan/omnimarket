@@ -1,0 +1,6 @@
+[package]
+name = "omni_nft"
+edition = "2024"
+
+[addresses]
+omni_nft = "0x0"

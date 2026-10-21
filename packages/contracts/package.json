@@ -1,0 +1,38 @@
+{
+  "name": "@omnimarket/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./ts/index.ts",
+    "./bytecode": "./ts/generated/bytecode.ts",
+    "./solana": "./ts/solana/core.ts",
+    "./sui": "./ts/sui/omni.ts",
+    "./sui-publish": "./scripts/sui-publish.ts"
+  },
+  "scripts": {
+    "build": "forge build && tsx scripts/generate.ts",
+    "test:sol": "forge test",
+    "typecheck": "tsc -p tsconfig.json",
+    "deploy:local": "tsx scripts/deploy.ts",
+    "deploy": "tsx scripts/deploy.ts",
+    "chain": "anvil --block-time 2 --state anvil-state.json",
+    "chain:solana": "mkdir -p .local && solana-test-validator --reset --quiet --ledger .local/solana-ledger --bpf-program CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d solana/mpl_core.so",
+    "chain:sui": "RUST_LOG=off sui start --with-faucet --force-regenesis",
+    "deploy:sui": "tsx scripts/deploy-sui.ts"
+  },
+  "dependencies": {
+    "@metaplex-foundation/mpl-core": "^1.10.0",
+    "@metaplex-foundation/umi": "^1.6.0",
+    "@mysten/kiosk": "^1.4.21",
+    "@mysten/sui": "^2.37.0",
+    "@noble/hashes": "^1.8.0",
+    "@solana/kit": "^8.5.0",
+    "viem": "^2.57.7"
+  },
+  "devDependencies": {
+    "@openzeppelin/contracts": "5.6.1",
+    "tsx": "^4.23.15"
+  }
+}

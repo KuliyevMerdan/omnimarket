@@ -1,0 +1,23 @@
+{
+  "name": "@omnimarket/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@hono/node-server": "^2.1.5",
+    "@mysten/sui": "^2.37.0",
+    "@omnimarket/auth": "workspace:*",
+    "@omnimarket/contracts": "workspace:*",
+    "hono": "^4.13.13",
+    "viem": "^2.57.7"
+  },
+  "devDependencies": {
+    "tsx": "^4.23.15"
+  }
+}

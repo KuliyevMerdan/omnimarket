@@ -1,0 +1,30 @@
+{
+  "name": "@omnimarket/wallet-core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./evm": "./src/adapters/evm/index.ts",
+    "./solana": "./src/adapters/solana/index.ts",
+    "./sui": "./src/adapters/sui/index.ts",
+    "./wallet-standard": "./src/adapters/wallet-standard/index.ts",
+    "./testing": "./src/testing/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@mysten/sui": "^2.37.0",
+    "@mysten/wallet-standard": "^0.21.35",
+    "@solana/kit": "^8.5.0",
+    "@solana/wallet-standard-features": "^1.5.0",
+    "@wallet-standard/app": "^1.1.1",
+    "@wallet-standard/base": "^1.1.1",
+    "@wallet-standard/features": "^1.1.1",
+    "@wallet-standard/wallet": "^1.1.1",
+    "viem": "^2.57.7"
+  }
+}

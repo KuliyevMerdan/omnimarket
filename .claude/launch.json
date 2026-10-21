@@ -1,0 +1,49 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "chain",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "dev:chain"
+      ],
+      "port": 8545
+    },
+    {
+      "name": "solana",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "dev:solana"
+      ],
+      "port": 8899
+    },
+    {
+      "name": "sui",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "dev:sui"
+      ],
+      "port": 9000
+    },
+    {
+      "name": "api",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--filter",
+        "@omnimarket/api",
+        "dev"
+      ],
+      "port": 8787
+    },
+    {
+      "name": "web",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--filter",
+        "@omnimarket/market-react",
+        "dev"
+      ],
+      "port": 5173
+    }
+  ]
+}

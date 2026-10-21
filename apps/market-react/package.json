@@ -1,0 +1,31 @@
+{
+  "name": "@omnimarket/market-react",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@mysten/kiosk": "^1.4.21",
+    "@mysten/sui": "^2.37.0",
+    "@omnimarket/auth": "workspace:*",
+    "@omnimarket/contracts": "workspace:*",
+    "@omnimarket/react": "workspace:*",
+    "@omnimarket/tx-engine": "workspace:*",
+    "@omnimarket/wallet-core": "workspace:*",
+    "@solana/kit": "^8.5.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "viem": "^2.57.7"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "vite": "^8.3.5"
+  }
+}

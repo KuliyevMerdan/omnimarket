@@ -1,0 +1,26 @@
+{
+  "name": "omnimarket",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.26.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "dev:chain": "pnpm --filter @omnimarket/contracts chain",
+    "deploy:local": "pnpm --filter @omnimarket/contracts build && pnpm --filter @omnimarket/contracts deploy:local",
+    "typecheck": "turbo run typecheck",
+    "test": "vitest run",
+    "test:sol": "pnpm --filter @omnimarket/contracts test:sol",
+    "build": "turbo run build",
+    "dev:solana": "pnpm --filter @omnimarket/contracts chain:solana",
+    "dev:sui": "pnpm --filter @omnimarket/contracts chain:sui"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "turbo": "^2.11.10",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.5"
+  }
+}
