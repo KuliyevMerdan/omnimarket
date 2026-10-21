@@ -1,13 +1,12 @@
-import { createKioskClient, getSuiDeployment, type SuiDeployment } from '@omnimarket/contracts/sui'
 import type { KioskClient } from '@mysten/kiosk'
 import type { SuiGrpcClient } from '@mysten/sui/grpc'
+import { suiNetwork } from '@omnimarket/app-core'
+import { getSuiClient } from '@omnimarket/app-core/sui'
+import { createKioskClient, getSuiDeployment, type SuiDeployment } from '@omnimarket/contracts/sui'
 import { useAccount, useWalletManager } from '@omnimarket/react'
 import type { CaipAccountId, CaipChainId } from '@omnimarket/wallet-core'
-import { isSolanaConnector, type SolanaConnector } from '@omnimarket/wallet-core/solana'
 import { isSuiConnector, type SuiConnector } from '@omnimarket/wallet-core/sui'
-import type { Address, Rpc, SolanaRpcApi } from '@solana/kit'
 import { useMemo } from 'react'
-import { getSolanaRpc, getSuiClient, suiNetwork } from '@omnimarket/app-core'
 
 const kioskClients = new Map<string, KioskClient>()
 function getKioskClient(chain: CaipChainId): KioskClient {
@@ -18,26 +17,6 @@ function getKioskClient(chain: CaipChainId): KioskClient {
     kioskClients.set(network, kiosk)
   }
   return kiosk
-}
-
-export interface SolanaContext {
-  readonly connector: SolanaConnector
-  readonly account: CaipAccountId
-  readonly address: Address
-  readonly chain: CaipChainId
-  readonly rpc: Rpc<SolanaRpcApi>
-}
-
-/** The connected Solana wallet with its RPC, or null when another ecosystem is connected. */
-export function useSolana(): SolanaContext | null {
-  const manager = useWalletManager()
-  const { account, address, chainId, walletId } = useAccount()
-  return useMemo(() => {
-    const connector = manager.getActiveConnector()
-    if (!isSolanaConnector(connector) || !account || !address || !chainId) return null
-    return { connector, account, address: address as Address, chain: chainId, rpc: getSolanaRpc(chainId) }
-    // walletId: the active connector changes together with it.
-  }, [manager, account, address, chainId, walletId])
 }
 
 export interface SuiContext {

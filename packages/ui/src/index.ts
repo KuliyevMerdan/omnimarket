@@ -2,6 +2,7 @@ import { OmniAddress } from './components/address'
 import { OmniButton } from './components/button'
 import { OmniNetworkBadge } from './components/network-badge'
 import { OmniQr } from './components/qr'
+import { OmniRiskReview } from './components/risk-review'
 import { OmniTxStatus } from './components/tx-status'
 import { OmniWalletOption } from './components/wallet-option'
 import { defineOnce } from './define'
@@ -10,6 +11,7 @@ export { OmniAddress, shortenAddress } from './components/address'
 export { OmniButton } from './components/button'
 export { OmniNetworkBadge } from './components/network-badge'
 export { OmniQr } from './components/qr'
+export { OmniRiskReview, type RiskReviewReport, type RiskReviewSource } from './components/risk-review'
 export { OmniTxStatus, TX_STATUS } from './components/tx-status'
 export { OmniWalletOption } from './components/wallet-option'
 export { defineOnce } from './define'
@@ -21,6 +23,7 @@ defineOnce('omni-tx-status', OmniTxStatus)
 defineOnce('omni-network-badge', OmniNetworkBadge)
 defineOnce('omni-wallet-option', OmniWalletOption)
 defineOnce('omni-qr', OmniQr)
+defineOnce('omni-risk-review', OmniRiskReview)
 
 declare global {
   interface HTMLElementTagNameMap {
@@ -30,5 +33,6 @@ declare global {
     'omni-network-badge': OmniNetworkBadge
     'omni-wallet-option': OmniWalletOption
     'omni-qr': OmniQr
+    'omni-risk-review': OmniRiskReview
   }
 }

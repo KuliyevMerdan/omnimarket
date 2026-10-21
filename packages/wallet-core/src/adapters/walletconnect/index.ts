@@ -1,8 +1,9 @@
 import type { ClientWithCoreApi } from '@mysten/sui/client'
 import type { Chain, Transport } from 'viem'
 import { evmChainId } from '../../caip'
-import type { CaipChainId, ChainAdapter, ChainNamespace, WalletConnector } from '../../types'
+import type { CaipChainId, ChainAdapter, ChainNamespace, WalletConnector, WalletInfo } from '../../types'
 import { Eip1193Connector } from '../evm/connector'
+import type { ProviderWrapper } from '../evm'
 import { SolanaConnector } from '../solana/connector'
 import { SuiConnector } from '../sui/connector'
 import type { StandardChainList } from '../wallet-standard/connector'
@@ -38,9 +39,14 @@ export {
 export { WALLETCONNECT_ICON } from './standard'
 
 export interface WalletConnectOptions extends Omit<WalletConnectSessionOptions, 'chains'> {
-  readonly eip155?: { readonly chains: readonly [Chain, ...Chain[]]; readonly transport?: (chain: Chain) => Transport }
+  readonly eip155?: {
+    readonly chains: readonly [Chain, ...Chain[]]
+    readonly transport?: (chain: Chain) => Transport
+    /** Same as the EVM adapter's `wrapProvider`: requests over the relay pass the same checks. */
+    readonly wrapProvider?: ProviderWrapper
+  }
   readonly solana?: { readonly chains: StandardChainList }
-  readonly sui?: { readonly chains: StandardChainList; readonly getClient: (chain: CaipChainId) => ClientWithCoreApi }
+  readonly sui?: { readonly chains: StandardChainList; readonly getClient: (chain: CaipChainId) => ClientWithCoreApi | Promise<ClientWithCoreApi> }
 }
 
 export interface WalletConnect {
@@ -69,15 +75,13 @@ export function createWalletConnect(options: WalletConnectOptions): WalletConnec
   const adapters: ChainAdapter[] = []
 
   if (options.eip155) {
-    const { chains: evmChains, transport } = options.eip155
+    const { chains: evmChains, transport, wrapProvider } = options.eip155
     adapters.push(
-      single('eip155', () =>
-        new Eip1193Connector({
-          provider: createWalletConnectEip1193Provider({ session, chains: evmChains, transport }),
-          chains: evmChains,
-          info: { id: walletConnectId('eip155'), name: 'WalletConnect', icon: WALLETCONNECT_ICON, namespace: 'eip155', source: 'walletconnect' },
-        }),
-      ),
+      single('eip155', () => {
+        const info: WalletInfo = { id: walletConnectId('eip155'), name: 'WalletConnect', icon: WALLETCONNECT_ICON, namespace: 'eip155', source: 'walletconnect' }
+        const provider = createWalletConnectEip1193Provider({ session, chains: evmChains, transport })
+        return new Eip1193Connector({ provider: wrapProvider?.(provider, info) ?? provider, chains: evmChains, info })
+      }),
     )
   }
   if (options.solana) {

@@ -10,10 +10,15 @@ const workspace = { singleton: true, requiredVersion: '^0.1.0' } as const
 
 export const OMNI_SHARED = {
   '@omnimarket/app-core': workspace,
+  '@omnimarket/app-core/solana': workspace,
+  '@omnimarket/app-core/sui': workspace,
   '@omnimarket/auth': workspace,
   '@omnimarket/auth/client': workspace,
   '@omnimarket/contracts': workspace,
+  '@omnimarket/guard': workspace,
   '@omnimarket/tx-engine': workspace,
+  '@omnimarket/tx-engine/solana': workspace,
+  '@omnimarket/tx-engine/sui': workspace,
   '@omnimarket/ui': workspace,
   '@omnimarket/wallet-core': workspace,
   '@omnimarket/wallet-core/evm': workspace,

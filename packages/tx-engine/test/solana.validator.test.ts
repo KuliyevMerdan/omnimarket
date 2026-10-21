@@ -8,7 +8,8 @@ import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { SolanaTxEngine, TxStore } from '../src'
+import { TxStore } from '../src'
+import { SolanaTxEngine } from '../src/solana'
 
 const hasValidator = spawnSync('solana-test-validator', ['--version'], { stdio: 'ignore' }).status === 0
 const CORE_SO = resolve(import.meta.dirname, '../../contracts/solana/mpl_core.so')

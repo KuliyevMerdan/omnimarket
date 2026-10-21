@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { OmniAddress, OmniTxStatus, OmniWalletOption, defineOnce, shortenAddress } from '.'
+import { OmniAddress, OmniRiskReview, OmniTxStatus, OmniWalletOption, defineOnce, shortenAddress, type RiskReviewReport } from '.'
 
 afterEach(() => {
   document.body.replaceChildren()
@@ -100,5 +100,76 @@ describe('omni-qr', () => {
     expect(svg.getAttribute('aria-label')).toBe('Pairing code')
     expect(svg.querySelectorAll('path')).toHaveLength(1)
     expect(svg.querySelector('rect')!.getAttribute('fill')).toBe('#fff')
+  })
+})
+
+describe('omni-risk-review', () => {
+  /** The gate's contract, in memory (the real one lives in @omnimarket/guard). */
+  function fakeGate(report: RiskReviewReport) {
+    let current: { id: number; report: RiskReviewReport } | null = { id: 1, report }
+    const listeners = new Set<() => void>()
+    const answers: boolean[] = []
+    let attached = 0
+    return {
+      answers,
+      get attached() {
+        return attached
+      },
+      getState: () => ({ current, queued: 0 }),
+      subscribe: (l: () => void) => (listeners.add(l), () => listeners.delete(l)),
+      resolve(id: number, accepted: boolean) {
+        if (current?.id !== id) return
+        answers.push(accepted)
+        current = null
+        listeners.forEach((l) => l())
+      },
+      attach: () => (attached++, () => void attached--),
+    }
+  }
+
+  const danger: RiskReviewReport = {
+    level: 'danger',
+    summary: 'Approve unlimited USDC for 0x0000…dEaD',
+    findings: [{ level: 'danger', title: 'The spender is a personal address, not a contract', detail: 'Approvals are meant for contracts.' }],
+    details: [{ label: 'Spender', value: '0x000000000000000000000000000000000000dEaD', address: '0x000000000000000000000000000000000000dEaD' }],
+  }
+
+  it('registers with the gate while mounted and shows the review as a modal', async () => {
+    const gate = fakeGate(danger)
+    const element = await mount('omni-risk-review', { gate })
+    expect(gate.attached).toBe(1)
+    const dialog = element.shadowRoot!.querySelector('dialog')!
+    expect(dialog.open).toBe(true)
+    expect(dialog.querySelector('h2')!.textContent).toBe(danger.summary)
+    expect(dialog.querySelector('omni-address')).not.toBeNull()
+    element.remove()
+    expect(gate.attached).toBe(0)
+  })
+
+  it('needs an explicit acknowledgement before a dangerous request can continue', async () => {
+    const gate = fakeGate(danger)
+    const element = await mount('omni-risk-review', { gate })
+    const [, proceed] = element.shadowRoot!.querySelectorAll('omni-button')
+    expect(proceed!.disabled).toBe(true)
+    proceed!.click()
+    expect(gate.answers).toEqual([])
+
+    const checkbox = element.shadowRoot!.querySelector<HTMLInputElement>('input[type=checkbox]')!
+    checkbox.checked = true
+    checkbox.dispatchEvent(new Event('change'))
+    await element.updateComplete
+    expect(proceed!.disabled).toBe(false)
+    proceed!.click()
+    expect(gate.answers).toEqual([true])
+    await element.updateComplete
+    expect(element.shadowRoot!.querySelector('dialog')!.open).toBe(false)
+  })
+
+  it('rejects on Escape instead of leaving the request pending', async () => {
+    const gate = fakeGate({ ...danger, level: 'warning' })
+    const element = await mount('omni-risk-review', { gate })
+    element.shadowRoot!.querySelector('dialog')!.dispatchEvent(new Event('cancel', { cancelable: true }))
+    expect(gate.answers).toEqual([false])
+    expect(OmniRiskReview).toBeDefined()
   })
 })

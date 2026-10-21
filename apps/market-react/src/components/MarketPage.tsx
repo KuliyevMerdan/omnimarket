@@ -3,12 +3,12 @@ import { useTxEngine } from '@omnimarket/react'
 import { useEffect, useState } from 'react'
 import { formatEther, isAddressEqual } from 'viem'
 import { describeError } from '../errors'
-import { fetchMetadata } from '../lib/nft'
 import { fetchOrders, type ListedOrder } from '../lib/orders'
 import { useLoader } from '../lib/useLoader'
 import { useMarket } from '../lib/useMarket'
-import { TokenCard } from './TokenCard'
+import { NftCard } from './TokenCard'
 import { TxButton } from './TxButton'
+import { VirtualGrid } from './VirtualGrid'
 
 export function MarketPage() {
   const engine = useTxEngine()
@@ -21,9 +21,7 @@ export function MarketPage() {
       const listed = await fetchOrders(chainId, signal)
       // Never trust the order book: re-check every order against the chain before showing "Buy".
       const statuses = await checkOrders(client, chainId, deployment.OmniMarket, listed.map((l) => l.order))
-      const active = listed.filter((_, i) => statuses[i] === 'active')
-      const metadata = await fetchMetadata(client, deployment.OmniNFT, active.map((l) => l.order.tokenId))
-      return active.map((listing) => ({ listing, metadata: metadata.get(listing.order.tokenId.toString()) }))
+      return listed.filter((_, i) => statuses[i] === 'active')
     },
     [chainId, deployment?.OmniMarket],
   )
@@ -67,11 +65,13 @@ export function MarketPage() {
       {!listings.loading && items.length === 0 && (
         <p className="muted">No active listings. List one of your NFTs from “My NFTs”.</p>
       )}
-      <div className="tokens">
-        {items.map(({ listing, metadata }) => {
+      <VirtualGrid
+        items={items}
+        getKey={(listing) => listing.hash}
+        renderItem={(listing) => {
           const mine = !!address && isAddressEqual(listing.order.seller, address)
           return (
-            <TokenCard key={listing.hash} tokenId={listing.order.tokenId} metadata={metadata}>
+            <NftCard tokenId={listing.order.tokenId}>
               <div className="price">
                 {formatEther(listing.order.price)} {chain?.nativeCurrency.symbol}
               </div>
@@ -84,10 +84,10 @@ export function MarketPage() {
                   Buy
                 </TxButton>
               )}
-            </TokenCard>
+            </NftCard>
           )
-        })}
-      </div>
+        }}
+      />
     </section>
   )
 }

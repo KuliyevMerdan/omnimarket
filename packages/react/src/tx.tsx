@@ -1,10 +1,10 @@
-import type { AnyTxRecord, SolanaTxEngine, SuiTxEngine, TxEngine } from '@omnimarket/tx-engine'
-import { createContext, useCallback, useContext, useEffect, useSyncExternalStore, type ReactNode } from 'react'
+import type { AnyTxRecord, LazyEngine, SolanaTxEngine, SuiTxEngine, TxEngine } from '@omnimarket/tx-engine'
+import { createContext, use, useCallback, useContext, useEffect, useSyncExternalStore, type ReactNode } from 'react'
 
 interface Engines {
   readonly evm: TxEngine
-  readonly solana?: SolanaTxEngine
-  readonly sui?: SuiTxEngine
+  readonly solana?: LazyEngine<SolanaTxEngine>
+  readonly sui?: LazyEngine<SuiTxEngine>
 }
 
 const TxEngineContext = createContext<Engines | null>(null)
@@ -20,8 +20,9 @@ export function TxEngineProvider({
   children,
 }: {
   engine: TxEngine
-  solana?: SolanaTxEngine
-  sui?: SuiTxEngine
+  /** Loaded on demand (chain SDKs); the hooks below suspend until it is. */
+  solana?: LazyEngine<SolanaTxEngine>
+  sui?: LazyEngine<SuiTxEngine>
   children: ReactNode
 }) {
   // Each start() resumes persisted pending transactions and is ref-counted (StrictMode-safe).
@@ -41,16 +42,18 @@ export function useTxEngine(): TxEngine {
   return useEngines().evm
 }
 
+/** Suspends while the Solana SDK loads: call it under a `<Suspense>` boundary. */
 export function useSolanaTxEngine(): SolanaTxEngine {
-  const engine = useEngines().solana
-  if (!engine) throw new Error('<TxEngineProvider solana={…}> is not configured')
-  return engine
+  const lazy = useEngines().solana
+  if (!lazy) throw new Error('<TxEngineProvider solana={…}> is not configured')
+  return lazy.current ?? use(lazy.load())
 }
 
+/** Suspends while the Sui SDK loads: call it under a `<Suspense>` boundary. */
 export function useSuiTxEngine(): SuiTxEngine {
-  const engine = useEngines().sui
-  if (!engine) throw new Error('<TxEngineProvider sui={…}> is not configured')
-  return engine
+  const lazy = useEngines().sui
+  if (!lazy) throw new Error('<TxEngineProvider sui={…}> is not configured')
+  return lazy.current ?? use(lazy.load())
 }
 
 export function useTransactions(): readonly AnyTxRecord[] {

@@ -23,5 +23,8 @@ export {
   type TxRecord,
   type TxStatus,
 } from './types'
-export { SolanaTxEngine, decodeSolanaError, type SolanaSendRequest, type SolanaTxEngineOptions } from './solana'
-export { SuiTxEngine, decodeSuiError, type SuiSendRequest, type SuiTxEngineOptions } from './sui'
+export { lazyEngine, type LazyEngine } from './lazy'
+// Types only: the engines themselves are separate entry points (`/solana`, `/sui`), so importing this
+// one never pulls in @solana/kit or @mysten/sui, also when it is shared whole by Module Federation.
+export type { SolanaSendRequest, SolanaTxEngine, SolanaTxEngineOptions } from './solana'
+export type { SuiSendRequest, SuiTxEngine, SuiTxEngineOptions } from './sui'

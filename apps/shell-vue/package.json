@@ -12,6 +12,7 @@
   "dependencies": {
     "@omnimarket/app-core": "workspace:*",
     "@omnimarket/auth": "workspace:*",
+    "@omnimarket/guard": "workspace:*",
     "@omnimarket/tx-engine": "workspace:*",
     "@omnimarket/ui": "workspace:*",
     "@omnimarket/vue": "workspace:*",

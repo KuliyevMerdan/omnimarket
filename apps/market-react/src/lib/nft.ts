@@ -1,4 +1,4 @@
-import { omniNftAbi, parseTokenUri, type TokenMetadata } from '@omnimarket/contracts'
+import { omniNftAbi } from '@omnimarket/contracts'
 import { isAddressEqual, type Address, type PublicClient } from 'viem'
 
 /**
@@ -73,24 +73,4 @@ export async function fetchOwnedTokens(
   return ids
     .filter((_, i) => owners[i]?.status === 'success' && isAddressEqual(owners[i].result as Address, owner))
     .sort((a, b) => (a < b ? -1 : 1))
-}
-
-export async function fetchMetadata(
-  client: PublicClient,
-  nft: Address,
-  tokenIds: readonly bigint[],
-): Promise<Map<string, TokenMetadata | null>> {
-  const unique = [...new Set(tokenIds)]
-  if (unique.length === 0) return new Map()
-  const uris = await client.multicall({
-    contracts: unique.map((id) => ({ address: nft, abi: omniNftAbi, functionName: 'tokenURI', args: [id] }) as const),
-    allowFailure: true,
-    deployless: !client.chain?.contracts?.multicall3,
-  })
-  return new Map(
-    unique.map((id, i) => {
-      const uri = uris[i]
-      return [id.toString(), uri?.status === 'success' ? parseTokenUri(uri.result as string) : null]
-    }),
-  )
 }

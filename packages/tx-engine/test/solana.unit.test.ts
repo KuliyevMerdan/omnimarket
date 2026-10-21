@@ -3,7 +3,8 @@ import { SOLANA_CHAINS, SolanaConnector } from '@omnimarket/wallet-core/solana'
 import { createMockSolanaWallet } from '@omnimarket/wallet-core/testing'
 import type { Address, Instruction, Rpc, SolanaRpcApi } from '@solana/kit'
 import { describe, expect, it } from 'vitest'
-import { SolanaTxEngine, TxStore, type SolanaTxRecord } from '../src'
+import { TxStore, type SolanaTxRecord } from '../src'
+import { SolanaTxEngine } from '../src/solana'
 
 const MEMO: Instruction = {
   programAddress: 'MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr' as Address,

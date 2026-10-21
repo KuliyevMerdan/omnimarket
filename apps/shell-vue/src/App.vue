@@ -7,6 +7,7 @@ import AccountCard from './components/AccountCard.vue'
 import ConnectCard from './components/ConnectCard.vue'
 import SiweCard from './components/SiweCard.vue'
 import WalletConnectDialog from './components/WalletConnectDialog.vue'
+import { core } from './core'
 import { useTxStore, useWalletStore } from './stores'
 
 const wallet = useWalletStore()
@@ -16,7 +17,11 @@ const auth = useSiwe()
 const route = useRoute()
 const router = useRouter()
 
-const PAGE_TABS = { market: { to: '/market', label: 'Market' }, mine: { to: '/nfts', label: 'My NFTs' } } as const
+const PAGE_TABS = {
+  market: { to: '/market', label: 'Market' },
+  mine: { to: '/nfts', label: 'My NFTs' },
+  inspect: { to: '/inspect', label: 'Check a request' },
+} as const
 
 /** Navigation comes from MARKET_PAGES: the shell knows the remote's pages without loading it. */
 const tabs = computed(() => [
@@ -58,5 +63,7 @@ async function disconnect() {
     <main v-else class="center"><ConnectCard /></main>
 
     <WalletConnectDialog />
+    <!-- The host owns the security review: the remote's transactions go through the same core. -->
+    <omni-risk-review :gate="core.guard" />
   </div>
 </template>

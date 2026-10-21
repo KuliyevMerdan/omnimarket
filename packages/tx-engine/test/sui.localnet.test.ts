@@ -17,7 +17,8 @@ import { SUI_CHAINS, SuiConnector } from '@omnimarket/wallet-core/sui'
 import { createMockSuiWallet } from '@omnimarket/wallet-core/testing'
 import { spawn, spawnSync, type ChildProcess } from 'node:child_process'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { SuiTxEngine, TxStore } from '../src'
+import { TxStore } from '../src'
+import { SuiTxEngine } from '../src/sui'
 
 const hasSui = spawnSync('sui', ['--version'], { stdio: 'ignore' }).status === 0
 const RPC = 'http://127.0.0.1:19000'

@@ -1,9 +1,5 @@
-import { SuiGrpcClient } from '@mysten/sui/grpc'
-import type { CaipChainId } from '@omnimarket/wallet-core'
-import { createSolanaRpc, type Rpc, type SolanaRpcApi } from '@solana/kit'
 import { createPublicClient, fallback, http, type Chain, type PublicClient, type Transport } from 'viem'
 import { findChain } from './chains'
-import { suiNetwork } from './networks'
 
 const evmClients = new Map<number, PublicClient>()
 
@@ -30,41 +26,6 @@ export function getPublicClient(chainId: number): PublicClient {
 export function evmTransport(chain: Chain): Transport {
   const custom = import.meta.env[`VITE_RPC_URL_${chain.id}`] as string | undefined
   return fallback([...(custom ? [http(custom)] : []), http(undefined, { timeout: 10_000 })])
-}
-
-const SOLANA_RPC: Record<string, string> = {
-  'solana:localnet': 'http://127.0.0.1:8899',
-  'solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1': 'https://api.devnet.solana.com',
-}
-const solanaClients = new Map<string, Rpc<SolanaRpcApi>>()
-
-export function getSolanaRpc(chain: CaipChainId): Rpc<SolanaRpcApi> {
-  let rpc = solanaClients.get(chain)
-  if (!rpc) {
-    const url = (import.meta.env.VITE_SOLANA_RPC_URL as string | undefined) ?? SOLANA_RPC[chain]
-    if (!url) throw new Error(`No RPC configured for ${chain}`)
-    rpc = createSolanaRpc(url)
-    solanaClients.set(chain, rpc)
-  }
-  return rpc
-}
-
-const SUI_RPC: Record<string, string> = {
-  localnet: 'http://127.0.0.1:9000',
-  testnet: 'https://fullnode.testnet.sui.io:443',
-  mainnet: 'https://fullnode.mainnet.sui.io:443',
-}
-const suiClients = new Map<string, SuiGrpcClient>()
-
-/** gRPC-web: Sui fullnodes no longer serve JSON-RPC (local 1.82 nodes answer 404). */
-export function getSuiClient(chain: CaipChainId): SuiGrpcClient {
-  const network = suiNetwork(chain)
-  let client = suiClients.get(network)
-  if (!client) {
-    client = new SuiGrpcClient({ baseUrl: SUI_RPC[network]!, network })
-    suiClients.set(network, client)
-  }
-  return client
 }
 
 /**

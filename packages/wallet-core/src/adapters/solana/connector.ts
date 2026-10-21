@@ -1,8 +1,6 @@
 import { hasBrand } from '../../brand'
 import {
   getBase58Decoder,
-  getTransactionDecoder,
-  getTransactionEncoder,
   type Address,
   type SignatureBytes,
   type Transaction,
@@ -69,12 +67,13 @@ export class SolanaConnector extends WalletStandardConnector {
     const walletAccount = this.walletAccount(account)
     const chain = this.chain.standard
     const feature = this.feature<SolanaSignTransactionFeature[typeof SolanaSignTransaction]>(SolanaSignTransaction)
-    const encoder = getTransactionEncoder()
-    const decoder = getTransactionDecoder()
     return {
       address: parseAccountId(account).address as Address,
       modifyAndSignTransactions: async (transactions) => {
         try {
+          const { getTransactionDecoder, getTransactionEncoder } = await import('./codecs')
+          const encoder = getTransactionEncoder()
+          const decoder = getTransactionDecoder()
           const outputs = await feature.signTransaction(
             ...transactions.map((tx) => ({ account: walletAccount, chain, transaction: new Uint8Array(encoder.encode(tx)) })),
           )

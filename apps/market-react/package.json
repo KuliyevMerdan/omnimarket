@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "budget": "vite build && node scripts/bundle-budget.mjs",
     "preview": "vite preview",
     "typecheck": "tsc -p tsconfig.json",
     "dev:remote": "vite build --mode remote && (vite build --mode remote --watch --logLevel warn & vite preview --mode remote)",
@@ -18,6 +19,7 @@
     "@omnimarket/app-core": "workspace:*",
     "@omnimarket/auth": "workspace:*",
     "@omnimarket/contracts": "workspace:*",
+    "@omnimarket/guard": "workspace:*",
     "@omnimarket/react": "workspace:*",
     "@omnimarket/tx-engine": "workspace:*",
     "@omnimarket/ui": "workspace:*",

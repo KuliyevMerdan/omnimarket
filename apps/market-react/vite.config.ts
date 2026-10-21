@@ -36,12 +36,15 @@ export default defineConfig(({ mode }) => {
         }),
       ],
       build: { outDir: 'dist-remote', target: 'esnext' },
+      // ES module workers: spawned through a same-origin blob when the page is the shell (lib/metadata.ts).
+      worker: { format: 'es' },
       server: { port: REMOTE_PORT, strictPort: true, origin, cors: true },
       preview: { port: REMOTE_PORT, strictPort: true, cors: true },
     }
   }
   return {
     plugins: [react(), serviceWorker()],
+    worker: { format: 'es' },
     server: {
       port: 5173,
       // SIWE binds signatures to this exact origin; a silently different port would fail verification.

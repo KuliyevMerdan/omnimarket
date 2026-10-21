@@ -3,7 +3,7 @@
 A multi-chain NFT marketplace built on its own wallet SDK: one adapter layer over EVM, Solana and Sui,
 with React and Vue bindings over the same framework-agnostic core.
 
-> Status: **phase 5**. Three ecosystems run end to end on local nodes:
+> Status: **phase 6**. Three ecosystems run end to end on local nodes:
 > - EVM: EIP-6963 wallets, gasless EIP-712 listings;
 > - Solana: Wallet Standard, Metaplex Core;
 > - Sui: Wallet Standard, Move package, Kiosk.
@@ -15,6 +15,10 @@ with React and Vue bindings over the same framework-agnostic core.
 > - the React marketplace on its own, as an installable PWA;
 > - a Vue 3 shell that hosts the marketplace as a Module Federation micro-frontend. Both bind to the
 >   same core instances and share a Web Components UI library.
+>
+> Every EVM signature and transaction is decoded and checked before the wallet opens: unlimited
+> approvals, `setApprovalForAll`, gasless permits (EIP-2612, DAI, Permit2), blind hashes, sign-ins for other
+> domains. See the [threat model](docs/threat-model.md).
 
 ## Layout
 
@@ -28,18 +32,24 @@ packages/
     src/adapters/walletconnect/    WalletConnect v2: one session, EIP-1193 provider + Wallet Standard wallets over it
     src/testing/                   real-key mock wallets: EIP-1193, Solana and Sui Wallet Standard, WalletConnect
   auth/          SIWE (EIP-4361) + CAIP-122 for Solana/Sui: builder, strict parser, server verification, did:pkh
+  guard/         signing firewall: decodes approvals, permits, Permit2, batches, messages into risk reports;
+                 EIP-1193 middleware + review gate (ADR 0006)
   tx-engine/     one TxStore, three engines: EVM (nonce replacements, reorgs), Solana (blockhash expiry,
-                 rebroadcast, commitment), Sui (digest-first, idempotent resubmit, checkpoints)
+                 rebroadcast, commitment), Sui (digest-first, idempotent resubmit, checkpoints);
+                 /solana and /sui are separate entry points, loaded lazily (lazyEngine)
   contracts/     Solidity (Foundry) + Move (omni_nft) + Metaplex Core/Kiosk helpers, safe metadata parsing
   react/         WalletProvider/TxEngineProvider/WalletConnectProvider, useAccount, useTransactions, useSiwe
   vue/           createOmniVue, useAccount/useWallets/useTransactions/useSiwe/useWalletConnect; Pinia stores (/pinia)
-  ui/            Web Components (Lit): button, address, tx status, network badge, wallet option, QR; tokens; Storybook
+  ui/            Web Components (Lit): button, address, tx status, network badge, wallet option, QR, risk review;
+                 tokens; Storybook
   app-core/      composition root shared by every frontend: chain config, RPC clients, createOmniCore(),
-                 the host/remote contract and the Module Federation share list (federation.ts)
+                 the guard wiring, the host/remote contract and the Module Federation share list (federation.ts);
+                 /solana and /sui: chain clients + engines, loaded on demand
 apps/
   api/           Hono: SIWE + session, signed order book
-  market-react/  Vite + React 19 marketplace: mint, list (gasless), buy, activity; PWA (pwa/: service worker plugin);
-                 `--mode remote` builds it as a micro-frontend (src/remote.tsx)
+  market-react/  Vite + React 19 marketplace: mint, list (gasless), buy, activity, "Check a request"; PWA (pwa/:
+                 service worker plugin); `--mode remote` builds it as a micro-frontend (src/remote.tsx);
+                 windowed token grid, metadata worker, bundle budget (scripts/bundle-budget.mjs)
   shell-vue/     Vue 3 + Pinia + vue-router shell: connect, WalletConnect, account, sign-in, activity; hosts the marketplace
 docs/adr/        architecture decisions
 ```
@@ -54,6 +64,7 @@ flowchart LR
     RB --> CORE
     CORE --> M[WalletManager]
     M --> EVM[EVM adapter<br/>EIP-6963 + EIP-1193]
+    EVM -. every signing request .-> GUARD[guard middleware<br/>review in the host]
     M --> WS[Wallet Standard registry]
     WS --> SOL[Solana connector]
     WS --> SUI[Sui connector]
@@ -82,6 +93,7 @@ pnpm --filter @omnimarket/contracts deploy:sui   # publish omni_nft → deployme
 pnpm dev                      # api :8787, web :5173 (proxied as /api)
 
 pnpm test                     # TypeScript unit + integration (spawn their own anvil / validator / localnet)
+pnpm --filter @omnimarket/market-react budget   # production build + startup JS budget (fails over 225 kB gzip)
 pnpm test:sol                 # Solidity: forge tests incl. fuzzing, EIP-1271, reentrancy
 (cd packages/contracts/move/omni_nft && sui move test)
 pnpm typecheck
@@ -204,6 +216,50 @@ See [ADR 0005](docs/adr/0005-vue-shell-react-remote-shared-core.md).
   even if two bundles load them. Wallet icons are re-sanitized inside the component. Storybook runs with the a11y
   addon: no WCAG 2.1 A/AA violations reported by axe.
 
+## Security model (phase 6)
+
+See [the threat model](docs/threat-model.md) and [ADR 0006](docs/adr/0006-signing-guard-as-provider-middleware.md).
+
+- **One checkpoint for every signature.** `@omnimarket/guard` wraps the EIP-1193 provider of every EVM wallet,
+  extensions and WalletConnect alike. `eth_sendTransaction`, `wallet_sendCalls`, `eth_signTypedData_v4`,
+  `personal_sign` and `eth_sign` are decoded before the wallet sees them. No feature can forget to call it.
+- **What it catches.**
+  - Unlimited ERC-20 allowances, and `setApprovalForAll` for an unknown operator.
+  - Approvals to personal addresses, EIP-7702 delegated ones included (checked with `getCode`).
+  - ERC-721 vs ERC-20 `approve` with the same selector (resolved with ERC-165).
+  - EIP-2612, DAI and Permit2 permits, recognized by their EIP-712 shape: unlimited amounts, long or no
+    expiry, a fake "Permit2" domain.
+  - Approvals hidden in EIP-5792 batches, blind hashes, sign-ins for other domains, invisible characters.
+- **Levels.** `info` passes, `warning` is reviewed, `danger` needs an explicit "I understand", and `blocked`
+  (`eth_sign`, cross-chain typed data, malformed data) never reaches the wallet.
+- **Fail closed.** If a request can't be analyzed, it goes to a review. If no review UI is mounted, it is
+  rejected. The review UI is `<omni-risk-review>`, mounted once by the host: the standalone app or the shell.
+- **Names come only from known contracts.** Token symbols are attacker-controlled, so they are sanitized,
+  marked unverified and always shown with the address.
+- **"Check a request"** runs the same analysis on anything pasted, without sending it to the wallet.
+
+## Performance (phase 6)
+
+- **Budget.** The JS a first visit must download (the entry and its static imports, gzip) is checked by
+  `pnpm --filter @omnimarket/market-react budget` against 225 kB. Before phase 6 it was 304 kB; now it is 216 kB.
+- **Chain SDKs on demand.** The Solana and Sui engines and clients are separate entry points
+  (`@omnimarket/tx-engine/solana|sui`, `@omnimarket/app-core/solana|sui`). `core.solana` and `core.sui` are
+  `lazyEngine`s. They load when a wallet of that ecosystem connects, or after a reload when the history still
+  has pending transactions of that chain. The React hooks suspend until then. The Solana transaction codecs in
+  the connectors load with the first transaction. In the shell, nothing from @mysten/sui or the Solana RPC
+  stack is fetched for an EVM user (checked in the browser).
+- **Windowed grid.** Above 60 tokens only the rows near the viewport are rendered. Row heights are measured,
+  rows are found by binary search over offsets, and the page itself scrolls, so it works the same in the
+  shell.
+- **Metadata on demand.** Each card asks for its own metadata. Requests within a frame are batched into one
+  multicall and cached. A 10 000-token wallet fetches a few dozen URIs for the first screen instead of
+  10 000.
+- **Worker.** Batches of 24+ token URIs are decoded and sanitized in a module worker. As a micro-frontend the
+  remote's chunks are cross-origin to the page, and `new Worker(url)` throws a `SecurityError` there. The worker
+  is then started from a same-origin blob that `import`s it, with a main-thread fallback.
+- **RPC fallback.** EVM uses viem's `fallback` transport (private RPC first). Solana gets the same with a
+  failover transport that moves on only for transport errors, never for JSON-RPC errors.
+
 ## Transaction lifecycle
 
 See [ADR 0002](docs/adr/0002-transaction-lifecycle.md) (EVM) and [ADR 0003](docs/adr/0003-wallet-standard-and-chain-lifecycles.md)
@@ -238,11 +294,11 @@ EVM details:
 | 3 ✅ | Wallet Standard adapters for Solana and Sui, CAIP-122 sign-in, Solana/Sui tx engines, Metaplex Core, Move package + Kiosk |
 | 4 ✅ | WalletConnect v2: one session across eip155/solana/sui namespaces, mobile deep links, PWA |
 | 5 ✅ | Vue 3 shell + Pinia bindings, Module Federation with the React app as a remote, UI library + Storybook |
-| 6 | Performance budget (lazy chain SDKs, virtualized grids, workers, RPC fallback), approval/permit warnings, threat model |
+| 6 ✅ | Performance budget (lazy chain SDKs, virtualized grids, workers, RPC fallback), approval/permit warnings, threat model |
 
 Production bundle (gzip JS): **125 kB** after phase 1, **174 kB** after phase 2. After phase 3 the main chunk is **93 kB**:
 the Solana page with Metaplex Core (55 kB) and the Sui modules with Kiosk (~22 kB) load only when a wallet of that ecosystem
-connects. Phase 6 continues with the chain SDKs used by the wallet adapters themselves.
+connects. Phase 6 moved the remaining chain SDKs (engines, clients, adapter codecs) behind `import()` too.
 
 Phase 4 JS loaded at startup went from 260 kB to 281 kB gzip (main chunk 96 kB), including the whole WalletConnect
 integration and the PWA. The WalletConnect SignClient (106 kB) is loaded only when someone connects through it, or
@@ -257,3 +313,7 @@ Known limitations:
   is still marked as under review).
 - On iOS, coming back to the browser after approving in the wallet is up to the wallet (`redirect` metadata); some
   require a manual switch.
+- The guard decodes EVM requests only and can't see where assets go inside an arbitrary contract call (no
+  balance-diff simulation). Seaport orders and Solana/Sui instructions are not decoded yet.
+- The Vue shell's *production* build doesn't start: Module Federation initializes shared modules out of
+  order. It works in development (how phase 5 was verified), and the phase 5 commit already shows the bug.

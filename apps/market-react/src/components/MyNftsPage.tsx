@@ -1,28 +1,28 @@
-import { omniMarketAbi, omniNftAbi, type TokenMetadata } from '@omnimarket/contracts'
+import { omniMarketAbi, omniNftAbi } from '@omnimarket/contracts'
 import { useTxEngine } from '@omnimarket/react'
 import { useEffect, useMemo, useState } from 'react'
 import { formatEther, isAddressEqual } from 'viem'
 import { describeError } from '../errors'
-import { fetchMetadata, fetchOwnedTokens } from '../lib/nft'
+import { fetchOwnedTokens } from '../lib/nft'
 import { fetchOrders, type ListedOrder } from '../lib/orders'
 import { useLoader } from '../lib/useLoader'
 import { useMarket } from '../lib/useMarket'
 import { ListForm } from './ListForm'
-import { TokenCard } from './TokenCard'
+import { NftCard } from './TokenCard'
 import { TxButton } from './TxButton'
+import { VirtualGrid } from './VirtualGrid'
 
 export function MyNftsPage() {
   const engine = useTxEngine()
   const { chainId, chain, deployment, client, signer, address } = useMarket()
   const [amount, setAmount] = useState(1)
   const [txIds, setTxIds] = useState<Record<string, string>>({})
-  const [listing, setListing] = useState<{ tokenId: bigint; metadata: TokenMetadata | null | undefined } | null>(null)
+  const [listing, setListing] = useState<bigint | null>(null)
 
   const owned = useLoader(async () => {
     if (!client || !deployment || !address) return []
-    const ids = await fetchOwnedTokens(client, deployment.OmniNFT, address, BigInt(deployment.startBlock))
-    const metadata = await fetchMetadata(client, deployment.OmniNFT, ids)
-    return ids.map((tokenId) => ({ tokenId, metadata: metadata.get(tokenId.toString()) }))
+    // Ids only: each card loads its own metadata when it scrolls into view.
+    return fetchOwnedTokens(client, deployment.OmniNFT, address, BigInt(deployment.startBlock))
   }, [client, deployment?.OmniNFT, address])
 
   const approval = useLoader(async () => {
@@ -155,12 +155,11 @@ export function MyNftsPage() {
         </div>
       )}
 
-      {listing && (
+      {listing !== null && (
         <ListForm
-          tokenId={listing.tokenId}
-          metadata={listing.metadata}
+          tokenId={listing}
           approved={approval.data === true}
-          previous={ordersByToken.get(listing.tokenId.toString())}
+          previous={ordersByToken.get(listing.toString())}
           onClose={() => setListing(null)}
           onListed={() => {
             setListing(null)
@@ -172,18 +171,20 @@ export function MyNftsPage() {
 
       {Boolean(owned.error) && <p className="error">{describeError(owned.error)}</p>}
       {!owned.loading && tokens.length === 0 && <p className="muted">You don’t own any Omni Genesis tokens yet. Mint one.</p>}
-      <div className="tokens">
-        {tokens.map(({ tokenId, metadata }) => {
+      <VirtualGrid
+        items={tokens}
+        getKey={(tokenId) => tokenId.toString()}
+        renderItem={(tokenId) => {
           const listed = ordersByToken.get(tokenId.toString())
           return (
-            <TokenCard key={tokenId.toString()} tokenId={tokenId} metadata={metadata}>
+            <NftCard tokenId={tokenId}>
               {listed ? (
                 <>
                   <div className="price">
                     Listed · {formatEther(listed.order.price)} {chain?.nativeCurrency.symbol}
                   </div>
                   <div className="row">
-                    <button className="secondary small-button" onClick={() => setListing({ tokenId, metadata })}>
+                    <button className="secondary small-button" onClick={() => setListing(tokenId)}>
                       Change price
                     </button>
                     <TxButton className="secondary small-button" txId={txIds[`cancel-${listed.hash}`]} onClick={() => cancelListing(listed)}>
@@ -192,12 +193,12 @@ export function MyNftsPage() {
                   </div>
                 </>
               ) : (
-                <button onClick={() => setListing({ tokenId, metadata })}>List for sale</button>
+                <button onClick={() => setListing(tokenId)}>List for sale</button>
               )}
-            </TokenCard>
+            </NftCard>
           )
-        })}
-      </div>
+        }}
+      />
     </section>
   )
 }

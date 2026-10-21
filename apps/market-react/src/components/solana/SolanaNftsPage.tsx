@@ -14,7 +14,7 @@ import { formatUnits } from 'viem'
 import { networkName, registerProgramErrors } from '@omnimarket/app-core'
 import { describeError, describeTxError } from '../../errors'
 import { useLoader } from '../../lib/useLoader'
-import { useSolana } from '../../lib/useChain'
+import { useSolana } from '../../lib/solana'
 import { TokenCard } from '../TokenCard'
 import { TxButton } from '../TxButton'
 

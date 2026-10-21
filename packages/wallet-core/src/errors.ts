@@ -12,6 +12,8 @@ export type WalletErrorCode =
   | 'ACCOUNT_MISMATCH'
   | 'CHAIN_MISMATCH'
   | 'TIMEOUT'
+  /** Refused by a local security check before the wallet was asked (see @omnimarket/guard). */
+  | 'BLOCKED'
   | 'UNKNOWN'
 
 /** EIP-1193 / EIP-1474 provider error codes mapped to our codes. */
@@ -68,6 +70,8 @@ export function toWalletError(error: unknown): WalletError {
 
   let current: unknown = error
   for (let depth = 0; current && typeof current === 'object' && depth < 8; depth++) {
+    // A provider middleware threw a WalletError and viem wrapped it.
+    if (current instanceof WalletError) return current
     const code = (current as { code?: unknown }).code
     if (typeof code === 'number' && RPC_CODES[code]) {
       return new WalletError(RPC_CODES[code], messageOf(error), { cause: error, rpcCode: code })

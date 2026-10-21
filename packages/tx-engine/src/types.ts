@@ -36,6 +36,8 @@ export type TxErrorKind =
   /** Solana: the blockhash expired before inclusion. Nothing executed; safe to rebuild and resend. */
   | 'expired'
   | 'interrupted'
+  /** Refused by the local security check (e.g. `eth_sign`, a cross-chain signature); the wallet was never asked. */
+  | 'blocked'
   | 'unknown'
 
 export interface TxErrorInfo {

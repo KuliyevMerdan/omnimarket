@@ -332,6 +332,16 @@
     grid-template-columns: repeat(auto-fill, minmax(min(180px, 100%), 1fr));
   }
 
+  /* Windowed grid (VirtualGrid): rows are positioned, the container keeps the full height. */
+  .tokens-window {
+    position: relative;
+  }
+
+  .tokens-row {
+    position: absolute;
+    inset: 0 0 auto;
+  }
+
   .token {
     display: flex;
     flex-direction: column;
@@ -550,5 +560,80 @@
     border-radius: var(--radius);
     background: var(--surface);
     box-shadow: 0 8px 24px rgb(0 0 0 / 0.3);
+  }
+
+  textarea {
+    font: 13px/1.5 var(--omni-font-mono, ui-monospace, monospace);
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    resize: vertical;
+  }
+
+  .card .tabs {
+    margin: 0;
+  }
+
+  /* Security check verdicts (Check a request page). */
+  .risk {
+    border-left: 4px solid var(--risk);
+  }
+
+  .risk-info {
+    --risk: var(--accent);
+  }
+
+  .risk-warning {
+    --risk: var(--warn);
+  }
+
+  .risk-danger,
+  .risk-blocked {
+    --risk: var(--error);
+  }
+
+  .risk-chip {
+    align-self: flex-start;
+    padding: 2px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--risk);
+    color: var(--risk);
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .risk-summary {
+    margin: 0;
+    font-size: 17px;
+    overflow-wrap: anywhere;
+  }
+
+  .risk-findings {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .risk-findings li {
+    padding: 10px 12px;
+    border-left: 3px solid var(--risk);
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--risk) 8%, transparent);
+  }
+
+  .risk-findings b,
+  .risk-findings span {
+    display: block;
+  }
+
+  .risk-findings span {
+    margin-top: 2px;
+    color: var(--muted);
+    font-size: 13px;
   }
 }

@@ -1,13 +1,15 @@
 import { createSiweClient, type SiweClient } from '@omnimarket/auth/client'
 import { omniMarketAbi, omniNftAbi } from '@omnimarket/contracts'
-import { SolanaTxEngine, SuiTxEngine, TxEngine, TxStore } from '@omnimarket/tx-engine'
-import { WalletManager } from '@omnimarket/wallet-core'
+import type { ReviewGate } from '@omnimarket/guard'
+import { TxEngine, TxStore, lazyEngine, type LazyEngine, type SolanaTxEngine, type SuiTxEngine } from '@omnimarket/tx-engine'
+import { WalletManager, parseChainId } from '@omnimarket/wallet-core'
 import { createEvmAdapter } from '@omnimarket/wallet-core/evm'
 import { createSolanaAdapter } from '@omnimarket/wallet-core/solana'
 import { createSuiAdapter } from '@omnimarket/wallet-core/sui'
 import type { WalletConnect } from '@omnimarket/wallet-core/walletconnect'
 import { SUPPORTED_CHAINS } from './chains'
-import { getPublicClient, getSolanaRpc, getSuiClient, solanaProgramErrorName } from './clients'
+import { getPublicClient } from './clients'
+import { createAppGuard } from './guard'
 import { SOLANA_NETWORKS, SUI_NETWORKS } from './networks'
 import { createAppWalletConnect } from './walletconnect'
 
@@ -20,10 +22,14 @@ export interface OmniCore {
   readonly manager: WalletManager
   readonly txStore: TxStore
   readonly evm: TxEngine
-  readonly solana: SolanaTxEngine
-  readonly sui: SuiTxEngine
+  /** Loaded with @solana/kit on first use (a Solana wallet connects, or Solana transactions are pending). */
+  readonly solana: LazyEngine<SolanaTxEngine>
+  /** Loaded with @mysten/sui on first use. */
+  readonly sui: LazyEngine<SuiTxEngine>
   readonly siwe: SiweClient
   readonly walletConnect: WalletConnect | null
+  /** Security reviews raised by the EVM provider middleware; render with `<omni-risk-review>`. */
+  readonly guard: ReviewGate
 }
 
 export interface OmniCoreOptions {
@@ -35,10 +41,12 @@ export interface OmniCoreOptions {
 export function createOmniCore({ apiBaseUrl = '/api' }: OmniCoreOptions = {}): OmniCore {
   // EIP-6963 for EVM; Solana and Sui share the Wallet Standard registry; WalletConnect adds one
   // relay-backed connector per namespace, all on a single session.
-  const walletConnect = createAppWalletConnect()
+  // Every EVM request that signs is decoded and checked before a wallet sees it.
+  const guard = createAppGuard()
+  const walletConnect = createAppWalletConnect(guard.wrapProvider)
   const manager = new WalletManager({
     adapters: [
-      createEvmAdapter({ chains: SUPPORTED_CHAINS }),
+      createEvmAdapter({ chains: SUPPORTED_CHAINS, wrapProvider: guard.wrapProvider }),
       createSolanaAdapter({ chains: SOLANA_NETWORKS }),
       createSuiAdapter({ chains: SUI_NETWORKS }),
       ...(walletConnect?.adapters ?? []),
@@ -56,9 +64,15 @@ export function createOmniCore({ apiBaseUrl = '/api' }: OmniCoreOptions = {}): O
     // Everyone else uses the wallet's own button; the tracker follows the replacement.
     canReplace: (wallet) => wallet.rdns?.startsWith('dev.omnimarket') ?? false,
   })
-  const solana = new SolanaTxEngine({ store: txStore, getRpc: getSolanaRpc, programErrors: solanaProgramErrorName })
-  const sui = new SuiTxEngine({ store: txStore, getClient: getSuiClient })
+  const solana = lazyEngine({ namespace: 'solana', store: txStore, load: () => import('./solana').then((m) => m.createSolanaEngine(txStore)) })
+  const sui = lazyEngine({ namespace: 'sui', store: txStore, load: () => import('./sui').then((m) => m.createSuiEngine(txStore)) })
+  // Start fetching a chain's SDK as soon as its wallet connects, not when its page first renders.
+  manager.subscribe(() => {
+    const chainId = manager.getState().connection?.chainId
+    const namespace = chainId && parseChainId(chainId).namespace
+    if (namespace === 'solana' || namespace === 'sui') void (namespace === 'solana' ? solana : sui).load().catch(() => {})
+  })
   const siwe = createSiweClient({ baseUrl: apiBaseUrl, statement: 'Sign in to OmniMarket.' })
 
-  return { manager, txStore, evm, solana, sui, siwe, walletConnect }
+  return { manager, txStore, evm, solana, sui, siwe, walletConnect, guard: guard.gate }
 }

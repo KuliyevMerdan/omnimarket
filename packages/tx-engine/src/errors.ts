@@ -50,7 +50,8 @@ export function decodeTxError(error: unknown, abis: readonly Abi[] = []): TxErro
   }
 
   const walletError = toWalletError(error)
-  if (walletError.code === 'USER_REJECTED') return { kind: 'user_rejected', message }
+  if (walletError.code === 'USER_REJECTED') return { kind: 'user_rejected', message: walletError.message }
+  if (walletError.code === 'BLOCKED') return { kind: 'blocked', message: walletError.message }
   if (walletError.code === 'CHAIN_MISMATCH' || walletError.code === 'UNRECOGNIZED_CHAIN') {
     return { kind: 'chain_mismatch', message }
   }

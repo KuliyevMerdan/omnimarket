@@ -1,5 +1,6 @@
 import { MARKET_PAGES, type MarketPage } from '@omnimarket/app-core'
 import { lazy, Suspense, type ReactNode } from 'react'
+import { InspectPage } from './components/InspectPage'
 import { MarketPage as EvmMarketPage } from './components/MarketPage'
 import { MyNftsPage } from './components/MyNftsPage'
 import { NetworkGate } from './components/NetworkGate'
@@ -20,6 +21,11 @@ const PAGES: Record<string, Partial<Record<MarketPage, () => ReactNode>>> = {
     mine: () => (
       <NetworkGate>
         <MyNftsPage />
+      </NetworkGate>
+    ),
+    inspect: () => (
+      <NetworkGate>
+        <InspectPage />
       </NetworkGate>
     ),
   },

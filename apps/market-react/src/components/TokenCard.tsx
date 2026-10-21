@@ -1,5 +1,6 @@
 import type { TokenMetadata } from '@omnimarket/contracts'
 import type { ReactNode } from 'react'
+import { useTokenMetadata } from '../lib/metadata'
 
 /**
  * Metadata is attacker-controlled. Only `parseTokenUri`-sanitized image URLs reach `<img src>`;
@@ -27,5 +28,14 @@ export function TokenCard({
         {children}
       </div>
     </article>
+  )
+}
+
+/** An Omni Genesis token whose metadata loads when the card is on screen (see `useTokenMetadata`). */
+export function NftCard({ tokenId, children }: { tokenId: bigint; children?: ReactNode }) {
+  return (
+    <TokenCard tokenId={tokenId} metadata={useTokenMetadata(tokenId)}>
+      {children}
+    </TokenCard>
   )
 }

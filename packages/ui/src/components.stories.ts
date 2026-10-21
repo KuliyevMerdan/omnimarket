@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/web-components-vite'
 import { html } from 'lit'
+import type { RiskReviewReport, RiskReviewSource } from './components/risk-review'
 import { TX_STATUS } from './components/tx-status'
 
 const meta: Meta = { title: 'OmniMarket' }
@@ -54,4 +55,58 @@ export const WalletPicker: StoryObj = {
 export const PairingQr: StoryObj<{ value: string }> = {
   args: { value: 'wc:7f6e5d4c3b2a1908f7e6d5c4b3a29180@2?relay-protocol=irn&symKey=0123456789abcdef' },
   render: ({ value }) => html`<omni-qr .value=${value} label="WalletConnect pairing QR code"></omni-qr>`,
+}
+
+/** A gate that never empties: answering shows the same review again. */
+function storyGate(report: RiskReviewReport): RiskReviewSource {
+  let id = 1
+  const listeners = new Set<() => void>()
+  return {
+    getState: () => ({ current: { id, report }, queued: 0 }),
+    subscribe: (listener) => (listeners.add(listener), () => void listeners.delete(listener)),
+    resolve: () => {
+      id++
+      listeners.forEach((l) => l())
+    },
+    attach: () => () => {},
+  }
+}
+
+const SPENDER = '0x000000000000000000000000000000000000dEaD'
+
+export const RiskReviewDanger: StoryObj = {
+  render: () =>
+    html`<omni-risk-review
+      .gate=${storyGate({
+        level: 'danger',
+        summary: 'Sign a permit: 0x0000…dEaD may spend unlimited USDC',
+        findings: [
+          { level: 'danger', title: 'The spender is a personal address, not a contract', detail: 'Approvals are meant for contracts. Giving one to a wallet address is how most token-draining scams work.' },
+          { level: 'warning', title: 'Gasless approval: a signature, not a transaction', detail: 'Nothing happens now and nothing shows up in your wallet history.' },
+          { level: 'warning', title: 'Unlimited allowance for USDC (0xA0b8…eB48, unverified symbol)' },
+          { level: 'warning', title: 'The permit never expires' },
+        ],
+        details: [
+          { label: 'Token', value: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', address: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48' },
+          { label: 'Spender', value: SPENDER, address: SPENDER },
+          { label: 'Amount', value: 'unlimited USDC' },
+          { label: 'Valid until', value: 'never' },
+        ],
+      })}
+    ></omni-risk-review>`,
+}
+
+export const RiskReviewWarning: StoryObj = {
+  render: () =>
+    html`<omni-risk-review
+      .gate=${storyGate({
+        level: 'warning',
+        summary: 'Give 0x3fC9…7FAD access to all your Omni Genesis NFTs',
+        findings: [
+          { level: 'warning', title: '0x3fC9…7FAD can transfer every NFT you hold in Omni Genesis', detail: 'Including NFTs you receive later, until you revoke it.' },
+          { level: 'warning', title: 'The spender is a contract this app doesn’t know', detail: 'Check the address on a block explorer before you continue.' },
+        ],
+        details: [{ label: 'Operator', value: '0x3fC91A3afd70395Cd496C647d5a6CC9D4B2b7FAD', address: '0x3fC91A3afd70395Cd496C647d5a6CC9D4B2b7FAD' }],
+      })}
+    ></omni-risk-review>`,
 }

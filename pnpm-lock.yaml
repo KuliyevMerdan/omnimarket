@@ -63,6 +63,9 @@ importers:
       '@omnimarket/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
+      '@omnimarket/guard':
+        specifier: workspace:*
+        version: link:../../packages/guard
       '@omnimarket/react':
         specifier: workspace:*
         version: link:../../packages/react
@@ -115,6 +118,9 @@ importers:
       '@omnimarket/auth':
         specifier: workspace:*
         version: link:../../packages/auth
+      '@omnimarket/guard':
+        specifier: workspace:*
+        version: link:../../packages/guard
       '@omnimarket/tx-engine':
         specifier: workspace:*
         version: link:../../packages/tx-engine
@@ -167,6 +173,9 @@ importers:
       '@omnimarket/contracts':
         specifier: workspace:*
         version: link:../contracts
+      '@omnimarket/guard':
+        specifier: workspace:*
+        version: link:../guard
       '@omnimarket/tx-engine':
         specifier: workspace:*
         version: link:../tx-engine
@@ -229,6 +238,22 @@ importers:
       tsx:
         specifier: ^4.23.15
         version: 4.23.15
+
+  packages/guard:
+    dependencies:
+      '@omnimarket/wallet-core':
+        specifier: workspace:*
+        version: link:../wallet-core
+      viem:
+        specifier: ^2.57.7
+        version: 2.57.7(typescript@7.0.2)
+    devDependencies:
+      '@omnimarket/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+      '@omnimarket/tx-engine':
+        specifier: workspace:*
+        version: link:../tx-engine
 
   packages/react:
     dependencies:

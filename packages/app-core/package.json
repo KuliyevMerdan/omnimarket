@@ -6,6 +6,8 @@
   "sideEffects": false,
   "exports": {
     ".": "./src/index.ts",
+    "./solana": "./src/solana.ts",
+    "./sui": "./src/sui.ts",
     "./dev/mockWallets": "./src/dev/mockWallets.ts",
     "./federation": "./federation.ts"
   },
@@ -16,6 +18,7 @@
     "@mysten/sui": "^2.37.0",
     "@omnimarket/auth": "workspace:*",
     "@omnimarket/contracts": "workspace:*",
+    "@omnimarket/guard": "workspace:*",
     "@omnimarket/tx-engine": "workspace:*",
     "@omnimarket/wallet-core": "workspace:*",
     "@solana/kit": "^8.5.0",

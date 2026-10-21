@@ -1,8 +1,9 @@
-import { isTrustedOperator, omniMarketAbi, omniNftAbi, orderTypedData, type Order, type TokenMetadata } from '@omnimarket/contracts'
+import { isTrustedOperator, omniMarketAbi, omniNftAbi, orderTypedData, type Order } from '@omnimarket/contracts'
 import { useTxEngine } from '@omnimarket/react'
 import { useState } from 'react'
 import { formatEther, parseEther } from 'viem'
 import { describeError, describeTxError } from '../errors'
+import { useTokenMetadata } from '../lib/metadata'
 import { postOrder, type ListedOrder } from '../lib/orders'
 import { useMarket } from '../lib/useMarket'
 import { TxButton } from './TxButton'
@@ -18,20 +19,19 @@ type Step = 'idle' | 'approving' | 'cancelling' | 'signing' | 'publishing'
 
 export function ListForm({
   tokenId,
-  metadata,
   approved,
   previous,
   onClose,
   onListed,
 }: {
   tokenId: bigint
-  metadata: TokenMetadata | null | undefined
   approved: boolean
   previous: ListedOrder | undefined
   onClose: () => void
   onListed: () => void
 }) {
   const engine = useTxEngine()
+  const metadata = useTokenMetadata(tokenId)
   const { chainId, chain, deployment, client, signer, address, account } = useMarket()
   const [price, setPrice] = useState(previous ? formatEther(previous.order.price) : '')
   const [days, setDays] = useState(7)

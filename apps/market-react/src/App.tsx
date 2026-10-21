@@ -12,7 +12,7 @@ import { MarketPages, pagesFor } from './MarketPages'
 
 type Tab = MarketPage | 'activity'
 
-const TAB_LABELS: Record<Tab, string> = { market: 'Market', mine: 'My NFTs', activity: 'Activity' }
+const TAB_LABELS: Record<Tab, string> = { market: 'Market', mine: 'My NFTs', inspect: 'Check a request', activity: 'Activity' }
 
 export function App({ siwe }: { siwe: SiweClient }) {
   const manager = useWalletManager()

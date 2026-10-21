@@ -6,8 +6,6 @@ import {
   getBase64Decoder,
   getBase64Encoder,
   getPublicKeyFromAddress,
-  getTransactionDecoder,
-  getTransactionEncoder,
   verifySignature,
   type Address,
   type SignatureBytes,
@@ -130,8 +128,6 @@ export function createWalletConnectSolanaWallet(options: Base): Wallet {
   const { session, chains } = options
   const base58 = { encode: getBase58Encoder(), decode: getBase58Decoder() }
   const base64 = { encode: getBase64Encoder(), decode: getBase64Decoder() }
-  const txEncoder = getTransactionEncoder()
-  const txDecoder = getTransactionDecoder()
 
   /** Every signature that comes back over the relay is checked against the key it claims to be from. */
   const assertSignature = async (address: string, signature: Uint8Array, data: Uint8Array) => {
@@ -172,6 +168,9 @@ export function createWalletConnectSolanaWallet(options: Base): Wallet {
           version: '1.0.0',
           supportedTransactionVersions: ['legacy', 0],
           signTransaction: async (...inputs: { account: WalletAccount; chain?: string; transaction: Uint8Array }[]) => {
+            const { getTransactionDecoder, getTransactionEncoder } = await import('../solana/codecs')
+            const txDecoder = getTransactionDecoder()
+            const txEncoder = getTransactionEncoder()
             const outputs = []
             for (const { account, chain, transaction } of inputs) {
               const result = await session.request<{ signature: string; transaction?: string }>(
@@ -222,7 +221,8 @@ export interface WalletConnectSuiOptions extends Base {
    * The relay protocol carries BCS bytes, not the dApp's transaction JSON, so the dApp builds them.
    * (Wallet Standard wallets build themselves; here we are the wallet's front end.)
    */
-  readonly getClient: (chain: CaipChainId) => ClientWithCoreApi
+  /** May load the SDK lazily. */
+  readonly getClient: (chain: CaipChainId) => ClientWithCoreApi | Promise<ClientWithCoreApi>
 }
 
 export function createWalletConnectSuiWallet(options: WalletConnectSuiOptions): Wallet {
@@ -236,7 +236,7 @@ export function createWalletConnectSuiWallet(options: WalletConnectSuiOptions): 
     const { Transaction } = await import('@mysten/sui/transactions')
     const tx = Transaction.from(await transaction.toJSON())
     tx.setSenderIfNotSet(sender)
-    return tx.build({ client: getClient(chain) })
+    return tx.build({ client: await getClient(chain) })
   }
 
   // Sui public keys aren't derivable from addresses; wallets may publish them in `sessionProperties`.

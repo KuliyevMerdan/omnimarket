@@ -1,6 +1,7 @@
+import type { ProviderWrapper } from '@omnimarket/wallet-core/evm'
 import { createWalletConnect, type WalletConnect } from '@omnimarket/wallet-core/walletconnect'
 import { SUPPORTED_CHAINS } from './chains'
-import { evmTransport, getSuiClient } from './clients'
+import { evmTransport } from './clients'
 import { SOLANA_NETWORKS, SUI_NETWORKS } from './networks'
 
 const projectId = import.meta.env.VITE_WC_PROJECT_ID as string | undefined
@@ -20,7 +21,7 @@ function mockEnabled(): boolean {
 }
 
 /** `null` when no WalletConnect project id is configured: the app then offers browser wallets only. */
-export function createAppWalletConnect(): WalletConnect | null {
+export function createAppWalletConnect(wrapProvider?: ProviderWrapper): WalletConnect | null {
   const mock = mockEnabled()
   if (!projectId && !mock) return null
   const origin = window.location.origin
@@ -37,8 +38,9 @@ export function createAppWalletConnect(): WalletConnect | null {
     },
     // `import.meta.env.DEV &&` is a build-time constant: production builds drop the mock chunk entirely.
     createClient: import.meta.env.DEV && mock ? () => import('./dev/mockWalletConnect').then((m) => m.createMockClient()) : undefined,
-    eip155: { chains: SUPPORTED_CHAINS, transport: evmTransport },
+    eip155: { chains: SUPPORTED_CHAINS, transport: evmTransport, wrapProvider },
     solana: { chains: SOLANA_NETWORKS },
-    sui: { chains: SUI_NETWORKS, getClient: getSuiClient },
+    // Builds Sui transactions for the phone; the SDK loads with the first one.
+    sui: { chains: SUI_NETWORKS, getClient: (chain) => import('./sui').then((m) => m.getSuiClient(chain)) },
   })
 }
