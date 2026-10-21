@@ -20,12 +20,12 @@ import {
 import type { Wallet } from '@wallet-standard/base'
 import { parseAccountId } from '../../caip'
 import { WalletError, toWalletError } from '../../errors'
-import type { CaipAccountId } from '../../types'
+import type { CaipAccountId, WalletInfo } from '../../types'
 import { WalletStandardConnector, type StandardChainList } from '../wallet-standard/connector'
 
 export class SolanaConnector extends WalletStandardConnector {
-  constructor(wallet: Wallet, chains: StandardChainList) {
-    super(wallet, { namespace: 'solana', chains })
+  constructor(wallet: Wallet, chains: StandardChainList, options: { source?: WalletInfo['source'] } = {}) {
+    super(wallet, { namespace: 'solana', chains, source: options.source })
   }
 
   /** Signature as base58, the encoding Solana tooling and SIWS verifiers expect. */

@@ -36,6 +36,8 @@ export type StandardChainList = readonly [StandardChain, ...StandardChain[]]
 export interface WalletStandardConnectorOptions {
   readonly namespace: Extract<ChainNamespace, 'solana' | 'sui'>
   readonly chains: StandardChainList
+  /** How the wallet was found; `walletconnect` for the relay-backed wallets. */
+  readonly source?: WalletInfo['source']
 }
 
 /**
@@ -54,7 +56,7 @@ export abstract class WalletStandardConnector implements WalletConnector {
   readonly #listeners = new Set<(event: ConnectorEvent) => void>()
   #detach: (() => void) | null = null
 
-  constructor(wallet: Wallet, { namespace, chains }: WalletStandardConnectorOptions) {
+  constructor(wallet: Wallet, { namespace, chains, source = 'wallet-standard' }: WalletStandardConnectorOptions) {
     this.wallet = wallet
     this.namespace = namespace
     this.chains = chains
@@ -64,7 +66,7 @@ export abstract class WalletStandardConnector implements WalletConnector {
       name: wallet.name.slice(0, 64),
       icon: sanitizeWalletIcon(wallet.icon),
       namespace,
-      source: 'wallet-standard',
+      source,
     }
   }
 
@@ -82,9 +84,12 @@ export abstract class WalletStandardConnector implements WalletConnector {
       throw toWalletError(error)
     }
     if (this.#accounts.length === 0) throw new WalletError('UNAUTHORIZED', 'Wallet returned no accounts for this chain')
-    if (chainId) {
-      const wanted = this.chains.find((c) => c.caip === chainId)
-      if (wanted && this.wallet.chains.includes(wanted.standard)) this.chain = wanted
+    const wanted = chainId ? this.chains.find((c) => c.caip === chainId) : undefined
+    if (wanted && this.wallet.chains.includes(wanted.standard)) this.chain = wanted
+    // The wallet's chain list can change between discovery and connect (a WalletConnect session
+    // approves a subset); never stay on a chain the wallet no longer declares.
+    else if (!this.wallet.chains.includes(this.chain.standard)) {
+      this.chain = this.chains.find((c) => this.wallet.chains.includes(c.standard)) ?? this.chain
     }
     this.#attach()
     return this.connection()

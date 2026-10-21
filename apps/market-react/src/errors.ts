@@ -10,6 +10,9 @@ const WALLET_MESSAGES: Partial<Record<WalletError['code'], string>> = {
   CHAIN_MISMATCH: 'The data you are signing is for another network. Switch networks first.',
   ACCOUNT_MISMATCH: 'The selected account is not connected.',
   NOT_CONNECTED: 'Connect a wallet first.',
+  TIMEOUT: 'Your wallet did not answer in time. Open the wallet app and try again.',
+  DISCONNECTED: 'The wallet ended the session.',
+  UNSUPPORTED_METHOD: 'Your wallet does not support this action here.',
 }
 
 const SIWE_MESSAGES: Record<string, string> = {

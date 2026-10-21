@@ -1,9 +1,12 @@
-import { useAccount, useWalletManager, useWalletState } from '@omnimarket/react'
+import { useAccount, useWalletConnect, useWalletManager, useWalletState } from '@omnimarket/react'
 import type { CaipChainId, ChainNamespace } from '@omnimarket/wallet-core'
+import { walletConnectId } from '@omnimarket/wallet-core/walletconnect'
 import { useState } from 'react'
 import { describeError } from '../errors'
-import { networksFor } from '../networks'
+import { DEFAULT_CHAINS, networksFor } from '../networks'
 import { WalletIcon } from './WalletIcon'
+
+const ECOSYSTEMS: Record<ChainNamespace, string> = { eip155: 'EVM', solana: 'Solana', sui: 'Sui' }
 
 export function AccountPanel({ onDisconnect }: { onDisconnect: () => void }) {
   const manager = useWalletManager()
@@ -13,6 +16,21 @@ export function AccountPanel({ onDisconnect }: { onDisconnect: () => void }) {
   const [error, setError] = useState<unknown>(null)
   const networks = networksFor(namespace as ChainNamespace)
   const supported = networks.some((n) => n.caip === chainId)
+  const wc = useWalletConnect()
+  const viaWalletConnect = wallet?.source === 'walletconnect'
+  const otherEcosystems = viaWalletConnect
+    ? (Object.keys(wc.namespaces) as ChainNamespace[]).filter((ns) => ns !== namespace)
+    : []
+
+  /** Another namespace of the same WalletConnect session: no QR code, no wallet prompt. */
+  const switchEcosystem = async (next: ChainNamespace) => {
+    setError(null)
+    try {
+      await manager.connect(walletConnectId(next), { chainId: DEFAULT_CHAINS[next] })
+    } catch (e) {
+      setError(e)
+    }
+  }
 
   const switchChain = async (next: CaipChainId) => {
     setError(null)
@@ -33,7 +51,7 @@ export function AccountPanel({ onDisconnect }: { onDisconnect: () => void }) {
       <div className="row">
         {wallet && <WalletIcon wallet={wallet} />}
         <div>
-          <div>{wallet?.name}</div>
+          <div>{viaWalletConnect && wc.peer ? `${wc.peer.name} · WalletConnect` : wallet?.name}</div>
           <code className="small" title={address}>
             {address}
           </code>
@@ -52,6 +70,24 @@ export function AccountPanel({ onDisconnect }: { onDisconnect: () => void }) {
         </select>
       </label>
       {!supported && <p className="warning">Your wallet is on a network this app does not support.</p>}
+
+      {viaWalletConnect && (
+        <div className="wc-session">
+          {otherEcosystems.length > 0 && (
+            <div className="row">
+              <span className="muted small">Same session:</span>
+              {otherEcosystems.map((ns) => (
+                <button key={ns} className="secondary small-button" onClick={() => switchEcosystem(ns)}>
+                  Use {ECOSYSTEMS[ns]}
+                </button>
+              ))}
+            </div>
+          )}
+          {wc.expiresAt && (
+            <p className="muted small">Session valid until {new Date(wc.expiresAt).toLocaleString()}</p>
+          )}
+        </div>
+      )}
       {Boolean(error) && <p className="error">{describeError(error)}</p>}
 
       <button className="secondary" onClick={onDisconnect}>

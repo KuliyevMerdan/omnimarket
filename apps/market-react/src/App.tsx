@@ -8,6 +8,8 @@ import { MarketPage } from './components/MarketPage'
 import { MyNftsPage } from './components/MyNftsPage'
 import { NetworkGate } from './components/NetworkGate'
 import { SiwePanel } from './components/SiwePanel'
+import { UpdateBanner } from './components/UpdateBanner'
+import { WalletConnectDialog } from './components/walletconnect/WalletConnectDialog'
 
 // Chain-specific SDKs (Metaplex Core/Umi, Kiosk) load only when a wallet of that ecosystem connects.
 const SolanaNftsPage = lazy(() => import('./components/solana/SolanaNftsPage').then((m) => ({ default: m.SolanaNftsPage })))
@@ -90,6 +92,8 @@ export function App({ siwe }: { siwe: SiweClient }) {
           <ConnectPanel />
         </main>
       )}
+      <WalletConnectDialog />
+      <UpdateBanner />
     </div>
   )
 }

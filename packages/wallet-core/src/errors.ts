@@ -10,6 +10,7 @@ export type WalletErrorCode =
   | 'NOT_CONNECTED'
   | 'ACCOUNT_MISMATCH'
   | 'CHAIN_MISMATCH'
+  | 'TIMEOUT'
   | 'UNKNOWN'
 
 /** EIP-1193 / EIP-1474 provider error codes mapped to our codes. */
@@ -21,6 +22,17 @@ const RPC_CODES: Readonly<Record<number, WalletErrorCode>> = {
   4901: 'CHAIN_DISCONNECTED',
   4902: 'UNRECOGNIZED_CHAIN',
   [-32002]: 'REQUEST_PENDING',
+  // WalletConnect SDK error codes (wallets answer with these over the relay).
+  5000: 'USER_REJECTED',
+  5001: 'USER_REJECTED', // chains
+  5002: 'USER_REJECTED', // methods
+  5003: 'USER_REJECTED', // events
+  5100: 'UNRECOGNIZED_CHAIN',
+  5101: 'UNSUPPORTED_METHOD',
+  5102: 'UNSUPPORTED_METHOD', // events
+  5103: 'UNAUTHORIZED', // accounts
+  5104: 'UNSUPPORTED_METHOD', // namespace key
+  6000: 'DISCONNECTED',
 }
 
 // Non-EVM wallets often reject without a numeric code.

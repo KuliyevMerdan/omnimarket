@@ -149,7 +149,8 @@ select {
   list-style: none;
 }
 
-button.wallet {
+button.wallet,
+a.wallet {
   display: grid;
   grid-template-columns: 28px 1fr auto;
   gap: 12px;
@@ -162,7 +163,8 @@ button.wallet {
   font-weight: 500;
 }
 
-button.wallet:hover:not(:disabled) {
+button.wallet:hover:not(:disabled),
+a.wallet:hover {
   border-color: var(--accent);
 }
 
@@ -488,4 +490,79 @@ button.small-button {
 
 input.price-input {
   width: 90px;
+}
+
+/* WalletConnect */
+a.wallet {
+  box-sizing: border-box;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  text-decoration: none;
+  grid-template-columns: 1fr auto;
+}
+
+.wc-dialog {
+  width: min(360px, calc(100vw - 32px));
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.wc-dialog[open] {
+  display: grid;
+  gap: 14px;
+}
+
+.wc-dialog::backdrop {
+  background: rgb(0 0 0 / 0.55);
+}
+
+.wc-dialog h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.wc-dialog details[open] summary {
+  margin-bottom: 10px;
+}
+
+.wc-dialog form {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.qr {
+  display: block;
+  width: 100%;
+  max-width: 260px;
+  height: auto;
+  margin: 0 auto;
+  border-radius: 8px;
+}
+
+.wc-session {
+  display: grid;
+  gap: 6px;
+}
+
+.wc-session .row {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.update-banner {
+  position: fixed;
+  inset: auto 16px 16px auto;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  max-width: calc(100vw - 32px);
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.3);
 }

@@ -10,6 +10,7 @@
     "./solana": "./src/adapters/solana/index.ts",
     "./sui": "./src/adapters/sui/index.ts",
     "./wallet-standard": "./src/adapters/wallet-standard/index.ts",
+    "./walletconnect": "./src/adapters/walletconnect/index.ts",
     "./testing": "./src/testing/index.ts"
   },
   "scripts": {
@@ -25,6 +26,8 @@
     "@wallet-standard/base": "^1.1.1",
     "@wallet-standard/features": "^1.1.1",
     "@wallet-standard/wallet": "^1.1.1",
+    "@walletconnect/sign-client": "2.26.0",
+    "@walletconnect/types": "2.26.0",
     "viem": "^2.57.7"
   }
 }

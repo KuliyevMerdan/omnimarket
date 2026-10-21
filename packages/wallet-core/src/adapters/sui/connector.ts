@@ -8,7 +8,7 @@ import {
 } from '@mysten/wallet-standard'
 import type { Wallet } from '@wallet-standard/base'
 import { toWalletError } from '../../errors'
-import type { CaipAccountId } from '../../types'
+import type { CaipAccountId, WalletInfo } from '../../types'
 import type { StandardChain } from '../wallet-standard/connector'
 import { WalletStandardConnector } from '../wallet-standard/connector'
 
@@ -18,8 +18,8 @@ export interface SerializableSuiTransaction {
 }
 
 export class SuiConnector extends WalletStandardConnector {
-  constructor(wallet: Wallet, chains: readonly [StandardChain, ...StandardChain[]]) {
-    super(wallet, { namespace: 'sui', chains })
+  constructor(wallet: Wallet, chains: readonly [StandardChain, ...StandardChain[]], options: { source?: WalletInfo['source'] } = {}) {
+    super(wallet, { namespace: 'sui', chains, source: options.source })
   }
 
   /**

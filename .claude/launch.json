@@ -44,6 +44,34 @@
         "dev"
       ],
       "port": 5173
+    },
+    {
+      "name": "web-5174",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--filter",
+        "@omnimarket/market-react",
+        "exec",
+        "vite",
+        "--port",
+        "5174"
+      ],
+      "port": 5174
+    },
+    {
+      "name": "web-preview",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--filter",
+        "@omnimarket/market-react",
+        "exec",
+        "vite",
+        "preview",
+        "--port",
+        "4174",
+        "--strictPort"
+      ],
+      "port": 4174
     }
   ]
 }

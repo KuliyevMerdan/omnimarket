@@ -1,7 +1,7 @@
 import { SuiGrpcClient } from '@mysten/sui/grpc'
 import type { CaipChainId } from '@omnimarket/wallet-core'
 import { createSolanaRpc, type Rpc, type SolanaRpcApi } from '@solana/kit'
-import { createPublicClient, fallback, http, type PublicClient } from 'viem'
+import { createPublicClient, fallback, http, type Chain, type PublicClient, type Transport } from 'viem'
 import { findChain } from './chains'
 import { suiNetwork } from './networks'
 
@@ -17,15 +17,19 @@ export function getPublicClient(chainId: number): PublicClient {
   const chain = findChain(chainId)
   if (!chain) throw new Error(`Chain ${chainId} is not supported`)
 
-  const custom = import.meta.env[`VITE_RPC_URL_${chainId}`] as string | undefined
-  const transports = [...(custom ? [http(custom)] : []), http(undefined, { timeout: 10_000 })]
   client = createPublicClient({
     chain,
-    transport: fallback(transports),
+    transport: evmTransport(chain),
     pollingInterval: chainId === 31337 ? 1000 : 4000,
   }) as PublicClient
   evmClients.set(chainId, client)
   return client
+}
+
+/** Read transport for a chain; also used by the WalletConnect provider for everything but signing. */
+export function evmTransport(chain: Chain): Transport {
+  const custom = import.meta.env[`VITE_RPC_URL_${chain.id}`] as string | undefined
+  return fallback([...(custom ? [http(custom)] : []), http(undefined, { timeout: 10_000 })])
 }
 
 const SOLANA_RPC: Record<string, string> = {

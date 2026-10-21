@@ -2,11 +2,18 @@ import { SOLANA_DEVNET, SOLANA_LOCALNET } from '@omnimarket/wallet-core/solana'
 import { SUI_LOCALNET, SUI_TESTNET } from '@omnimarket/wallet-core/sui'
 import type { StandardChain, StandardChainList } from '@omnimarket/wallet-core/wallet-standard'
 import type { CaipChainId, ChainNamespace } from '@omnimarket/wallet-core'
-import { SUPPORTED_CHAINS, explorerTxUrl } from './chains'
+import { DEFAULT_CHAIN_ID, SUPPORTED_CHAINS, explorerTxUrl } from './chains'
 
 /** Local validators first in development (`pnpm dev:solana`, `pnpm dev:sui`). */
 export const SOLANA_NETWORKS: StandardChainList = import.meta.env.DEV ? [SOLANA_LOCALNET, SOLANA_DEVNET] : [SOLANA_DEVNET]
 export const SUI_NETWORKS: StandardChainList = import.meta.env.DEV ? [SUI_LOCALNET, SUI_TESTNET] : [SUI_TESTNET]
+
+/** Where a fresh connection starts, per ecosystem. */
+export const DEFAULT_CHAINS: Record<ChainNamespace, CaipChainId> = {
+  eip155: DEFAULT_CHAIN_ID,
+  solana: SOLANA_NETWORKS[0].caip,
+  sui: SUI_NETWORKS[0].caip,
+}
 
 export interface NetworkOption {
   readonly caip: CaipChainId

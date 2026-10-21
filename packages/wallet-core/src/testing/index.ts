@@ -2,3 +2,4 @@ export { announceProvider, createMockProvider, type MockProvider, type MockProvi
 export { createMockSolanaWallet, type MockSolanaWalletOptions } from './solana-wallet'
 export { createMockSuiWallet, type MockSuiWalletOptions } from './sui-wallet'
 export { registerInBrowser, type MockStandardWalletControls } from './standard-wallet'
+export { createMockWalletConnect, type MockMisbehavior, type MockWalletConnect, type MockWalletConnectOptions, type MockWalletConnectRequest } from './walletconnect'

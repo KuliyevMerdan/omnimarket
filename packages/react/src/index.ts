@@ -9,3 +9,4 @@ export {
 } from './wallet'
 export { useSiwe, type SiweStatus, type UseSiwe } from './siwe'
 export { TxEngineProvider, useSolanaTxEngine, useSuiTxEngine, useTransaction, useTransactions, useTxEngine } from './tx'
+export { WalletConnectProvider, useWalletConnect, useWalletConnectSession } from './walletconnect'
