@@ -1,5 +1,5 @@
 import { federation } from '@module-federation/vite'
-import { MARKET_REMOTE, OMNI_SHARED } from '@omnimarket/app-core/federation'
+import { FEDERATED_OUTPUT, MARKET_REMOTE, OMNI_SHARED } from '@omnimarket/app-core/federation'
 import vue from '@vitejs/plugin-vue'
 import { defineConfig } from 'vite'
 
@@ -24,7 +24,13 @@ export default defineConfig({
       dts: false,
     }),
   ],
-  build: { target: 'esnext' },
+  resolve: {
+    // The shell pins TypeScript 6 (vue-tsc), the workspace uses 7, so pnpm installs two peer variants
+    // of vue and pinia: @omnimarket/vue would bind to its own copies (a second `piniaSymbol`, no active
+    // pinia). The dev server's dep optimizer happens to merge them by name; the production build doesn't.
+    dedupe: ['vue', 'pinia'],
+  },
+  build: { target: 'esnext', rolldownOptions: { output: FEDERATED_OUTPUT } },
   server: {
     port: 5180,
     // SIWE binds signatures to this exact origin.

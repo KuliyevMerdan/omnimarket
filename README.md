@@ -208,6 +208,9 @@ See [ADR 0005](docs/adr/0005-vue-shell-react-remote-shared-core.md).
 - **Singletons by configuration.** `@omnimarket/*` (per entry point) and `viem` are shared singletons. At runtime
   every share is provided by the shell and loaded once. `instanceof` checks on connectors and `WalletError` work
   across bundles anyway (`Symbol.for` brands), in case a share is ever misconfigured.
+- **Production builds.** Rolldown merges modules into chunks, so a chunk loaded for one share (viem) also ran
+  another (app-core) before its dependencies were shared: both federated builds use strict execution order. The
+  shell also dedupes `vue`/`pinia` (its TypeScript 6 pin gives them a second peer variant). Details in the ADR.
 - **Failure isolation.** A versioned mount contract: the shell refuses an incompatible remote, and a remote that
   fails to load leaves the shell working, with a retry.
 - **Style isolation.** Remote CSS is nested under `.omni-market` and lives in one ref-counted `<style>` that
@@ -315,5 +318,3 @@ Known limitations:
   require a manual switch.
 - The guard decodes EVM requests only and can't see where assets go inside an arbitrary contract call (no
   balance-diff simulation). Seaport orders and Solana/Sui instructions are not decoded yet.
-- The Vue shell's *production* build doesn't start: Module Federation initializes shared modules out of
-  order. It works in development (how phase 5 was verified), and the phase 5 commit already shows the bug.

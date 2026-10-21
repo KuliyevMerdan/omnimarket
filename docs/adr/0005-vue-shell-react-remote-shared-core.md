@@ -69,3 +69,18 @@ its own wallet layer, which breaks things:
   helps with network errors only; a broken deploy needs a reload.
 - `vue-tsc` needs the TypeScript JS API, which TypeScript 7 no longer ships: the shell pins
   `typescript@6` locally for type checking. The rest of the monorepo stays on 7.
+- Production builds needed two fixes that development (Vite's dep optimizer, no chunking) hides:
+  - **Chunk merging vs. share init order.** The host's init loads shares in dependency waves (viem,
+    then wallet-core/*, …, app-core last). Workspace singletons that other shares consume (app-core,
+    wallet-core) are evaluated synchronously from the local copy, and they read their dependencies at
+    module evaluation (`DEFAULT_CHAINS` uses `SOLANA_DEVNET`). Rolldown had put viem's provider into
+    the same chunk as app-core, so loading viem in the first wave ran app-core while the
+    wallet-core/solana share was still pending (`reading 'caip'` of undefined). Both federated builds
+    now set `strictExecutionOrder` (`FEDERATED_OUTPUT` in `app-core/federation.ts`): each module
+    runs when it is imported, wherever rolldown places it. Cost: about +4% JS (~25 kB gzip) in the
+    shell. Splitting chunks per share by hand was the alternative; it breaks whenever a new
+    dependency lands in a shared chunk.
+  - **Duplicate Vue and Pinia.** The TypeScript 6 pin makes pnpm install a second peer variant of
+    `vue` and `pinia` for the shell, so `@omnimarket/vue` bundled its own Pinia (another
+    `piniaSymbol`, no active pinia: `reading '_s'`). The shell's Vite config sets
+    `resolve.dedupe: ['vue', 'pinia']`.

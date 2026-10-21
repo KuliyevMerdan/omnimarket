@@ -29,6 +29,19 @@ export const OMNI_SHARED = {
   viem: { singleton: true, requiredVersion: '^2.57.0' },
 }
 
+/**
+ * Rolldown output options for every federated production build (host and remote).
+ *
+ * Host init loads the shared providers in dependency order (viem, then wallet-core/*, ..., then
+ * app-core), and providers that other shared packages consume read their dependencies synchronously at
+ * module evaluation (`SOLANA_NETWORKS = [SOLANA_DEVNET]`). Rolldown merges modules into chunks by
+ * reachability, so the chunk that provides viem also held app-core: loading viem evaluated app-core
+ * before wallet-core/solana was in the share cache. Strict execution order wraps each module in a lazy
+ * initializer, so a chunk runs only the modules that were actually imported, in source order
+ * (+4% JS, ~25 kB gzip for the shell).
+ */
+export const FEDERATED_OUTPUT = { strictExecutionOrder: true } as const
+
 export const MARKET_REMOTE = {
   name: 'market',
   /** `import('market/market')` in the host. */

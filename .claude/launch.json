@@ -117,6 +117,31 @@
         "storybook"
       ],
       "port": 6006
+    },
+    {
+      "name": "shell-preview",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--filter",
+        "@omnimarket/shell-vue",
+        "exec",
+        "vite",
+        "preview",
+        "--port",
+        "5180",
+        "--strictPort"
+      ],
+      "port": 5180
+    },
+    {
+      "name": "market-remote-preview",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--filter",
+        "@omnimarket/market-react",
+        "preview:remote"
+      ],
+      "port": 5181
     }
   ]
 }

@@ -1,5 +1,5 @@
 import { federation } from '@module-federation/vite'
-import { MARKET_REMOTE, OMNI_SHARED } from '@omnimarket/app-core/federation'
+import { FEDERATED_OUTPUT, MARKET_REMOTE, OMNI_SHARED } from '@omnimarket/app-core/federation'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import { serviceWorker } from './pwa/plugin.ts'
@@ -35,7 +35,7 @@ export default defineConfig(({ mode }) => {
           dts: false,
         }),
       ],
-      build: { outDir: 'dist-remote', target: 'esnext' },
+      build: { outDir: 'dist-remote', target: 'esnext', rolldownOptions: { output: FEDERATED_OUTPUT } },
       // ES module workers: spawned through a same-origin blob when the page is the shell (lib/metadata.ts).
       worker: { format: 'es' },
       server: { port: REMOTE_PORT, strictPort: true, origin, cors: true },
