@@ -1,5 +1,7 @@
 # OmniMarket
 
+[![CI](https://github.com/KuliyevMerdan/omnimarket/actions/workflows/ci.yml/badge.svg)](https://github.com/KuliyevMerdan/omnimarket/actions/workflows/ci.yml)
+
 A multi-chain NFT marketplace built on its own wallet SDK: one adapter layer over EVM, Solana and Sui,
 with React and Vue bindings over the same framework-agnostic core.
 

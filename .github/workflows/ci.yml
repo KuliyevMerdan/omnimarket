@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Version comes from `packageManager` in package.json.
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      # anvil for the EVM integration tests (tx engine, guard, WalletConnect over anvil). The Solana
+      # validator and Sui localnet suites skip themselves when their CLIs are missing, as here.
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: stable
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+
+  solidity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive # forge-std
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: stable
+      # OpenZeppelin comes from node_modules (see foundry.toml remappings).
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test:sol
+
+  bundle-budget:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Production build + startup JS budget (fails over 225 kB gzip).
+      - run: pnpm --filter @omnimarket/market-react budget
