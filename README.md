@@ -5,6 +5,9 @@
 A multi-chain NFT marketplace built on its own wallet SDK: one adapter layer over EVM, Solana and Sui,
 with React and Vue bindings over the same framework-agnostic core.
 
+Live demo: [standalone PWA](https://omnimarket-ccjx.onrender.com/) · [Vue shell hosting the React micro-frontend](https://omnimarket-ccjx.onrender.com/shell/)
+(Render free tier: the first request after a while takes about a minute).
+
 > Status: **phase 6**. Three ecosystems run end to end on local nodes:
 > - EVM: EIP-6963 wallets, gasless EIP-712 listings;
 > - Solana: Wallet Standard, Metaplex Core;
