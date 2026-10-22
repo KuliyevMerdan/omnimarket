@@ -8,6 +8,8 @@ import { defineConfig } from 'vite'
  * React marketplace as a Module Federation remote (`market/market`).
  */
 export default defineConfig({
+  // `/shell/` in the single-origin deployment (scripts/build-render.sh), next to the standalone app.
+  base: process.env.SHELL_BASE ?? '/',
   plugins: [
     // `<omni-*>` are web components from @omnimarket/ui, not Vue components.
     vue({ template: { compilerOptions: { isCustomElement: (tag) => tag.startsWith('omni-') } } }),

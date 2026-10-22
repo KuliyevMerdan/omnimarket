@@ -14,6 +14,7 @@
     "test": "vitest run",
     "test:sol": "pnpm --filter @omnimarket/contracts test:sol",
     "build": "turbo run build",
+    "build:render": "bash scripts/build-render.sh",
     "dev:solana": "pnpm --filter @omnimarket/contracts chain:solana",
     "dev:sui": "pnpm --filter @omnimarket/contracts chain:sui"
   },

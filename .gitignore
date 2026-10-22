@@ -15,3 +15,5 @@ packages/contracts/.local/
 packages/contracts/move/*/build/
 storybook-static/
 dist-remote/
+dist-render/
+.render/

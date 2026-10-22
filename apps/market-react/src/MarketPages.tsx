@@ -23,11 +23,8 @@ const PAGES: Record<string, Partial<Record<MarketPage, () => ReactNode>>> = {
         <MyNftsPage />
       </NetworkGate>
     ),
-    inspect: () => (
-      <NetworkGate>
-        <InspectPage />
-      </NetworkGate>
-    ),
+    // Needs no contracts: it works on any EVM chain the wallet is on.
+    inspect: () => <InspectPage />,
   },
   solana: { mine: () => <SolanaNftsPage /> },
   sui: { market: () => <SuiMarketPage />, mine: () => <SuiNftsPage /> },

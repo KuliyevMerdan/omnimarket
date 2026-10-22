@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import ActivityView from './views/ActivityView.vue'
 
 export const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     { path: '/', redirect: '/market' },
     // One record for both marketplace pages: the remote stays mounted and only gets `update()`.

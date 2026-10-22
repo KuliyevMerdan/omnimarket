@@ -1,4 +1,4 @@
-import { getPublicClient, knownContract } from '@omnimarket/app-core'
+import { findChain, getPublicClient, knownContract } from '@omnimarket/app-core'
 import { orderTypedData } from '@omnimarket/contracts'
 import {
   PERMIT2_ADDRESS,
@@ -133,7 +133,8 @@ export function InspectPage() {
     const ctx: GuardContext = {
       chainId,
       account: address,
-      client: getPublicClient(chainId),
+      // Without an RPC for this chain the checks are static (spenders show as "could not be checked").
+      client: findChain(chainId) ? getPublicClient(chainId) : undefined,
       known: knownContract,
       domain: location.host,
     }

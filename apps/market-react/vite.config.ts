@@ -20,7 +20,8 @@ export default defineConfig(({ mode }) => {
     const origin = process.env.MARKET_REMOTE_ORIGIN ?? `http://localhost:${REMOTE_PORT}`
     return {
       // Absolute: chunks are requested from the host's page, they must not resolve against its origin.
-      base: `${origin}/`,
+      // MARKET_REMOTE_BASE=/remote/ when the host is served from the same origin (scripts/build-render.sh).
+      base: process.env.MARKET_REMOTE_BASE ?? `${origin}/`,
       // Icons and the web manifest belong to the standalone PWA, not to the micro-frontend.
       publicDir: false,
       plugins: [

@@ -142,6 +142,20 @@
         "preview:remote"
       ],
       "port": 5181
+    },
+    {
+      "name": "render-local",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "STATIC_DIR=../../dist-render",
+        "PORT=8790",
+        "SIWE_ORIGIN=http://localhost:8790",
+        "pnpm",
+        "--filter",
+        "@omnimarket/api",
+        "start"
+      ],
+      "port": 8790
     }
   ]
 }

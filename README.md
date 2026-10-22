@@ -131,6 +131,15 @@ Import an anvil dev account (keys are printed by `anvil`) into MetaMask/Rabby, u
 Testnets: `RPC_URL=… DEPLOYER_PRIVATE_KEY=… pnpm --filter @omnimarket/contracts deploy` adds Sepolia/Amoy addresses
 to `deployments/index.json`. The app and API pick them up automatically.
 
+Deploy (Render): [`render.yaml`](render.yaml) is a Blueprint for one Node web service. `pnpm build:render` builds
+every frontend into `dist-render/`: the standalone PWA at `/`, the Vue shell at `/shell/` and the React remote at
+`/remote/`. The API serves them with `STATIC_DIR=dist-render` and mounts itself under `/api`
+(`apps/api/src/static.ts`). Everything shares one origin, so SIWE, the session cookie, Module Federation and the
+metadata worker need no CORS or proxy. Testnet contracts: `RPC_URL=… DEPLOYER_PRIVATE_KEY=… pnpm --filter
+@omnimarket/contracts deploy` writes `deployments/index.json`; commit it and the next deploy picks it up.
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/KuliyevMerdan/omnimarket)
+
 API environment variables:
 
 | Variable | Default | Purpose |

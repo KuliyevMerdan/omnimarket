@@ -1,0 +1,26 @@
+# Render Blueprint: one Node web service serves the API under /api and every frontend from the same
+# origin (/ standalone PWA, /shell/ Vue shell, /remote/ React remote). See apps/api/src/static.ts.
+services:
+  - type: web
+    name: omnimarket
+    runtime: node
+    plan: free
+    region: frankfurt
+    # pnpm is installed locally (no reliance on Corepack in the build image), then every frontend is built.
+    buildCommand: >-
+      npm install --no-save --no-audit --no-fund --prefix .render pnpm@10.26.0 &&
+      export PATH="$PWD/.render/node_modules/.bin:$PATH" &&
+      pnpm install --frozen-lockfile &&
+      pnpm build:render
+    startCommand: apps/api/node_modules/.bin/tsx apps/api/src/index.ts
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: STATIC_DIR
+        value: dist-render
+      # SIWE_ORIGIN defaults to RENDER_EXTERNAL_URL (set by Render); set it when using a custom domain.
+      # Optional: WalletConnect (https://dashboard.reown.com). Without it the option is hidden.
+      - key: VITE_WC_PROJECT_ID
+        sync: false

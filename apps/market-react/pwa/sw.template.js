@@ -38,6 +38,8 @@ self.addEventListener('fetch', (event) => {
   // Only our own static files. API calls (session cookies, single-use nonces), RPC endpoints,
   // the WalletConnect relay and every other origin go straight to the network, never to a cache.
   if (url.origin !== self.location.origin || url.pathname.startsWith('/api/')) return
+  // The Vue shell and the remote it hosts share this origin in production; they are not this app.
+  if (url.pathname.startsWith('/shell/') || url.pathname.startsWith('/remote/')) return
 
   if (request.mode === 'navigate') {
     // Network first, so a deploy is visible on the next load; the cached shell only when offline.

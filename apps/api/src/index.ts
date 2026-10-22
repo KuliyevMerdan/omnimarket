@@ -3,12 +3,14 @@ import { createPublicClient, http, type Chain, type PublicClient } from 'viem'
 import { getDeployment } from '@omnimarket/contracts'
 import { foundry, mainnet, polygon, polygonAmoy, sepolia } from 'viem/chains'
 import { createApp } from './app'
+import { withStaticApps } from './static'
 import type { MarketConfig } from './orders'
 
 const chains: readonly Chain[] = [mainnet, sepolia, polygon, polygonAmoy, foundry]
 const env = process.env
 const port = Number(env.PORT ?? 8787)
-const origin = env.SIWE_ORIGIN ?? 'http://localhost:5173'
+// Render sets RENDER_EXTERNAL_URL to the service's public URL.
+const origin = env.SIWE_ORIGIN ?? env.RENDER_EXTERNAL_URL ?? 'http://localhost:5173'
 
 // Lazily created; only hit for smart-contract wallet signatures (EIP-1271 / 6492).
 const clients = new Map<number, PublicClient>()
@@ -42,7 +44,10 @@ const app = createApp(
   { getPublicClient },
 )
 
-serve({ fetch: app.fetch, port }, ({ port }) => {
-  console.log(`api listening on http://localhost:${port} (SIWE origin ${origin})`)
+// STATIC_DIR: also serve the frontends, with the API under /api (production, one origin).
+const server = env.STATIC_DIR ? withStaticApps(app, env.STATIC_DIR) : app
+
+serve({ fetch: server.fetch, port }, ({ port }) => {
+  console.log(`api listening on http://localhost:${port}${env.STATIC_DIR ? ' (API under /api, frontends from ' + env.STATIC_DIR + ')' : ''} (SIWE origin ${origin})`)
   console.log(`order books: ${[...markets.keys()].join(', ') || 'none (run pnpm --filter @omnimarket/contracts deploy:local)'}`)
 })
